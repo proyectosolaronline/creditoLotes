@@ -594,5 +594,33 @@ document.getElementById('form-overlay').addEventListener('click', function(e){
 window.addEventListener('load', checkAuth);
 console.log('✅ Admin Lotes San Pedro cargado');
 </script>
+
+
+
+
+
+  <!-- Botón agregar.html - Pegar debajo del grupo de botones flotantes existente -->
+<div style="position: absolute; bottom: 28px; left: 14px; z-index: 1200;">
+  <a href="agregar.html" style="text-decoration: none;">
+    <button style="
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 20px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 5px 18px rgba(0,0,0,.35);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform .15s;
+    " onmousedown="this.style.transform='scale(.92)'" onmouseup="this.style.transform='scale(1)'" ontouchend="this.style.transform='scale(1)'">
+      <span style="font-size: 18px;">➕</span> agregar.html
+    </button>
+  </a>
+</div>
 </body>
 </html>
