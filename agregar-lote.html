@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mapa GPS San Quintín — Lotes</title>
+  <meta name="description" content="Mapa interactivo de San Quintín, Baja California con geolocalización GPS y gestión de lotes." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://proyectosolaronline-ops.github.io/Cat-logo-tienda-online/" />
+  <meta property="og:title" content="Mapa GPS San Quintín — Lotes" />
+  <meta property="og:description" content="Mapa interactivo de San Quintín con GPS y gestión de lotes." />
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-dark: #0d47a1;
+      --accent: #ff6900;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #000;
+      color: #fff;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      padding: 12px 16px 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      z-index: 1100;
+    }
+
+    .header-logo {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      background: rgba(255,255,255,.18);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .header-title {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .header-sub {
+      font-size: 10px;
+      opacity: .7;
+      margin-top: 1px;
+    }
+
+    .header-btn {
+      margin-left: auto;
+      background: rgba(255,255,255,.2);
+      border: 1.5px solid rgba(255,255,255,.5);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .search-wrap {
+      padding: 10px 16px 12px;
+      background: linear-gradient(180deg, rgba(26,115,232,.08) 0%, transparent 100%);
+      flex-shrink: 0;
+      z-index: 1050;
+    }
+
+    .search-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border-radius: 50px;
+      padding: 0 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+      height: 46px;
+    }
+
+    .search-inner svg {
+      flex-shrink: 0;
+      opacity: .45;
+    }
+
+    #searchInput {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: #222;
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+    }
+
+    #searchInput::placeholder {
+      color: #aaa;
+    }
+
+    #clearBtn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      display: none;
+      color: #999;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    #voiceBtn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: #555;
+      font-size: 20px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    #map {
+      flex: 1;
+      z-index: 1;
+    }
+
+    /* Confirmación de ubicación */
+    #confirmar-ubicacion {
+      display: none;
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: #fff;
+      color: #222;
+      padding: 12px 20px;
+      border-radius: 50px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,.4);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    #confirmar-ubicacion.show {
+      display: flex;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #16a34a;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+      animation: fadeInOut 2.5s ease forwards;
+      pointer-events: none;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      75% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    }
+
+    .fab-group {
+      position: absolute;
+      bottom: 28px;
+      right: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1200;
+    }
+
+    .fab {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 18px rgba(0,0,0,.35);
+      transition: transform .15s;
+    }
+
+    .fab:active {
+      transform: scale(.92);
+    }
+
+    .fab-fs {
+      background: #fff;
+      color: #333;
+    }
+
+    .fab-locate {
+      background: #fff;
+      color: var(--primary);
+    }
+
+    .fab-lotes {
+      background: #fff;
+      color: #16a34a;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .leaflet-tooltip.pin-label {
+      background: rgba(255,255,255,.95) !important;
+      border: 1px solid #ddd !important;
+      border-radius: 8px !important;
+      padding: 5px 8px !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25) !important;
+      font-size: 9px !important;
+      white-space: nowrap !important;
+      color: #111 !important;
+    }
+
+    /* Panel de Lote */
+    #lote-panel-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 3000;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    #lote-panel-bg.open {
+      display: flex;
+    }
+
+    #lote-panel {
+      background: #fff;
+      color: #222;
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-height: 85dvh;
+      overflow-y: auto;
+      padding: 20px 18px 28px;
+      animation: slideUp .3s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 -8px 40px rgba(0,0,0,.4);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .lote-drag {
+      width: 36px;
+      height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    .lote-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: #111;
+      margin-bottom: 4px;
+    }
+
+    .lote-coords {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 16px;
+      font-family: monospace;
+      background: #f5f5f5;
+      padding: 6px 10px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    .lote-field {
+      margin-bottom: 12px;
+    }
+
+    .lote-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .lote-field input,
+    .lote-field select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      background: #fafafa;
+    }
+
+    .lote-field input:focus,
+    .lote-field select:focus {
+      border-color: var(--primary);
+      outline: none;
+      background: #fff;
+    }
+
+    .lote-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .lote-foto-preview {
+      width: 100%;
+      height: 120px;
+      border-radius: 10px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px dashed #ccc;
+    }
+
+    .lote-foto-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .lote-foto-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .lote-foto-btn {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .lote-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .lote-btn {
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .lote-btn-cancel {
+      background: #f1f3f6;
+      color: #555;
+    }
+
+    .lote-btn-save {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .lote-btn-delete {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Modal lista de lotes */
+    #lista-lotes-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 3000;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    #lista-lotes-bg.open {
+      display: flex;
+    }
+
+    #lista-lotes {
+      background: #fff;
+      color: #222;
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-height: 70dvh;
+      overflow-y: auto;
+      animation: slideUp .3s cubic-bezier(.4,0,.2,1);
+    }
+
+    .lista-header {
+      padding: 16px 20px;
+      background: #16a34a;
+      color: #fff;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+      position: sticky;
+      top: 0;
+      border-radius: 24px 24px 0 0;
+    }
+
+    .lista-close {
+      font-size: 26px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .lista-body {
+      padding: 10px 0;
+    }
+
+    .lote-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      align-items: center;
+    }
+
+    .lote-item:active {
+      background: #f0f4ff;
+    }
+
+    .lote-item-color {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .no-lotes {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+      font-size: 14px;
+    }
+
+    body.fs-mode #header,
+    body.fs-mode .search-wrap {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div id="header">
+    <div class="header-logo" id="header-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+        <path d="M12 6v6l4 2"/>
+      </svg>
+    </div>
+    <div>
+      <div class="header-title">Mapa GPS San Quintín</div>
+      <div class="header-sub" id="estado-actual">📍 San Quintín, Baja California</div>
+    </div>
+    <button class="header-btn" onclick="location.reload()" title="Recargar">🔄</button>
+  </div>
+
+  <!-- Buscador -->
+  <div class="search-wrap">
+    <div class="search-inner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Buscar lugares en San Quintín..." autocomplete="off" autocorrect="off" spellcheck="false">
+      <button id="clearBtn" onclick="clearSearch()">✕</button>
+      <button id="voiceBtn" onclick="startVoiceSearch()" title="Búsqueda por voz">🎤</button>
+    </div>
+  </div>
+
+  <!-- Mapa -->
+  <div id="map"></div>
+
+  <!-- Botón confirmar ubicación -->
+  <button id="confirmar-ubicacion" onclick="confirmarUbicacionLote()">
+    ✅ Confirmar ubicación del lote
+  </button>
+
+  <!-- Panel de Lote -->
+  <div id="lote-panel-bg" onclick="if(event.target===this)closeLotePanel()">
+    <div id="lote-panel">
+      <div class="lote-drag"></div>
+      <div class="lote-title" id="lote-title">🌱 Nuevo Lote</div>
+      <div class="lote-coords" id="lote-coords">30.56000, -115.95000</div>
+
+      <div class="lote-field">
+        <label>Código del lote *</label>
+        <input type="text" id="lote-codigo" placeholder="Ej: LOTE-001">
+      </div>
+
+      <div class="lote-row">
+        <div class="lote-field">
+          <label>Tipo de pago</label>
+          <select id="lote-tipopago">
+            <option value="Contado">Contado</option>
+            <option value="Crédito">Crédito</option>
+            <option value="Enganche">Enganche</option>
+          </select>
+        </div>
+        <div class="lote-field">
+          <label>Estado</label>
+          <select id="lote-estado">
+            <option value="Disponible">Disponible</option>
+            <option value="Apartado">Apartado</option>
+            <option value="Vendido">Vendido</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="lote-field">
+        <label>Valor ($)</label>
+        <input type="number" id="lote-valor" placeholder="Ej: 250000">
+      </div>
+
+      <div class="lote-row">
+        <div class="lote-field">
+          <label>Metros</label>
+          <input type="text" id="lote-metros" placeholder="Ej: 200">
+        </div>
+        <div class="lote-field">
+          <label>Medida</label>
+          <select id="lote-medida">
+            <option value="m²">m²</option>
+            <option value="ha">ha</option>
+            <option value="acres">acres</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="lote-field">
+        <label>Localidad</label>
+        <input type="text" id="lote-localidad" placeholder="Ej: San Quintín" value="San Quintín">
+      </div>
+
+      <div class="lote-field">
+        <label>Foto del lote</label>
+        <div class="lote-foto-preview" id="lote-foto-preview">
+          <span id="lote-foto-placeholder">📷 Toca para agregar foto</span>
+        </div>
+        <div class="lote-foto-btns">
+          <button class="lote-foto-btn" onclick="document.getElementById('lote-foto-camara').click()">📷 Cámara</button>
+          <button class="lote-foto-btn" onclick="document.getElementById('lote-foto-galeria').click()">🖼️ Galería</button>
+        </div>
+        <input type="file" id="lote-foto-camara" accept="image/*" capture="environment" style="display:none" onchange="handleFotoSeleccionada(this)">
+        <input type="file" id="lote-foto-galeria" accept="image/*" style="display:none" onchange="handleFotoSeleccionada(this)">
+      </div>
+
+      <div class="lote-actions" id="lote-actions">
+        <button class="lote-btn lote-btn-cancel" onclick="closeLotePanel()">🗑️ Cancelar</button>
+        <button class="lote-btn lote-btn-save" id="lote-btn-save" onclick="guardarLote()">💾 Guardar Lote</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de lotes -->
+  <div id="lista-lotes-bg" onclick="if(event.target===this)closeListaLotes()">
+    <div id="lista-lotes">
+      <div class="lista-header">
+        <span>📋 Lotes Registrados</span>
+        <span class="lista-close" onclick="closeListaLotes()">×</span>
+      </div>
+      <div class="lista-body" id="lista-lotes-body"></div>
+    </div>
+  </div>
+
+  <!-- Botones flotantes -->
+  <div class="fab-group">
+    <button class="fab" onclick="centrarSanQuintin()" title="Ir a San Quintín" style="background:#fff;color:#333;font-size:18px;">🏠</button>
+    <button class="fab fab-lotes" onclick="mostrarListaLotes()" title="Ver lotes">📋</button>
+    <button class="fab fab-locate" onclick="refreshGPS()" title="Mi ubicación">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>
+      </svg>
+    </button>
+    <button class="fab fab-fs" id="btn-fs" onclick="toggleFullscreen()" title="Pantalla completa">
+      <svg id="fs-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+      </svg>
+      <svg id="fs-compress" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none;">
+        <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/>
+      </svg>
+    </button>
+  </div>
+
+  <input type="hidden" id="lote-foto-base64" value="">
+
+  <script>
+    // ═══════════════════════════════════════════
+    // CONFIGURACIÓN
+    // ═══════════════════════════════════════════
+    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbw83md07bzx1UmGRn51i-pRiuvQaEig_mUWS4VjvO0yTIlDCULqT8p3NGsSe2S4nZhzjA/exec';
+
+    let map;
+    let userLat = 30.5600;
+    let userLng = -115.9500;
+    let isFsMode = false;
+    let userMarker = null;
+    let searchLayer = null;
+    let lotesLayer = null;
+    let currentLoteLat = null;
+    let currentLoteLng = null;
+    let currentLoteId = null;
+    let allLotes = [];
+    let marcadorTemporal = null;
+    let clickTimer = null;
+    let lastClickLat = null;
+    let lastClickLng = null;
+
+    // ═══════════════════════════════════════════
+    // INICIALIZAR MAPA
+    // ═══════════════════════════════════════════
+    function initMap() {
+      map = L.map('map', {
+        zoomControl: false,
+        attributionControl: true
+      }).setView([userLat, userLng], 14);
+
+      const calle = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      });
+
+      const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: '© Esri, Maxar'
+      });
+
+      calle.addTo(map);
+
+      L.control.layers({ "🗺️ Calle": calle, "🛰️ Satélite": satelite }, null, { position: 'topright' }).addTo(map);
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      updateUserMarker();
+      obtenerGPS();
+      cargarLotesDesdeBackend();
+
+      // CLICK EN EL MAPA → Nuevo lote
+      map.on('click', function(e) {
+        // Verificar si el click fue en un marcador existente (no crear nuevo)
+        if (e.originalEvent.target.closest('.leaflet-marker-icon') ||
+            e.originalEvent.target.closest('.leaflet-popup') ||
+            e.originalEvent.target.closest('.leaflet-tooltip')) {
+          return;
+        }
+
+        lastClickLat = e.latlng.lat;
+        lastClickLng = e.latlng.lng;
+
+        // Colocar marcador temporal
+        colocarMarcadorTemporal(e.latlng.lat, e.latlng.lng);
+
+        // Mostrar botón de confirmación
+        document.getElementById('confirmar-ubicacion').classList.add('show');
+      });
+    }
+
+    // ═══════════════════════════════════════════
+    // MARCADOR TEMPORAL
+    // ═══════════════════════════════════════════
+    function colocarMarcadorTemporal(lat, lng) {
+      removerMarcadorTemporal();
+
+      marcadorTemporal = L.marker([lat, lng], {
+        icon: L.divIcon({
+          html: `<div style="background:#16a34a;color:#fff;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;border:4px solid #fff;box-shadow:0 4px 24px rgba(22,163,74,.7);">📍</div>`,
+          className: 'pin-marker',
+          iconSize: [52, 52],
+          iconAnchor: [26, 52]
+        }),
+        draggable: true
+      }).addTo(map);
+
+      marcadorTemporal.on('dragend', function() {
+        const pos = marcadorTemporal.getLatLng();
+        lastClickLat = pos.lat;
+        lastClickLng = pos.lng;
+      });
+
+      currentLoteLat = lat;
+      currentLoteLng = lng;
+    }
+
+    function removerMarcadorTemporal() {
+      if (marcadorTemporal) {
+        map.removeLayer(marcadorTemporal);
+        marcadorTemporal = null;
+      }
+      document.getElementById('confirmar-ubicacion').classList.remove('show');
+    }
+
+    function confirmarUbicacionLote() {
+      if (!currentLoteLat || !currentLoteLng) return;
+      document.getElementById('confirmar-ubicacion').classList.remove('show');
+      abrirPanelLote(currentLoteLat, currentLoteLng, null);
+    }
+
+    // ═══════════════════════════════════════════
+    // PANEL DE LOTE
+    // ═══════════════════════════════════════════
+    function abrirPanelLote(lat, lng, loteExistente = null) {
+      currentLoteLat = lat;
+      currentLoteLng = lng;
+
+      if (loteExistente) {
+        currentLoteId = loteExistente.idLote;
+        document.getElementById('lote-title').textContent = '✏️ Editar Lote';
+        document.getElementById('lote-codigo').value = loteExistente.codigolote || '';
+        document.getElementById('lote-tipopago').value = loteExistente.tipopago || 'Contado';
+        document.getElementById('lote-estado').value = loteExistente.estado || 'Disponible';
+        document.getElementById('lote-valor').value = loteExistente.valor || '';
+        document.getElementById('lote-metros').value = loteExistente.metros || '';
+        document.getElementById('lote-medida').value = loteExistente.medida || 'm²';
+        document.getElementById('lote-localidad').value = loteExistente.localidad || 'San Quintín';
+        document.getElementById('lote-foto-base64').value = loteExistente.fotolote || '';
+
+        const preview = document.getElementById('lote-foto-preview');
+        if (loteExistente.fotolote) {
+          preview.innerHTML = `<img src="${loteExistente.fotolote}" alt="Foto lote">`;
+        } else {
+          preview.innerHTML = '<span id="lote-foto-placeholder">📷 Toca para agregar foto</span>';
+        }
+
+        document.getElementById('lote-actions').innerHTML = `
+          <button class="lote-btn lote-btn-delete" onclick="eliminarLote()">🗑️ Eliminar</button>
+          <button class="lote-btn lote-btn-save" onclick="guardarLote()">💾 Actualizar</button>
+        `;
+      } else {
+        currentLoteId = null;
+        document.getElementById('lote-title').textContent = '🌱 Nuevo Lote';
+        document.getElementById('lote-codigo').value = '';
+        document.getElementById('lote-tipopago').value = 'Contado';
+        document.getElementById('lote-estado').value = 'Disponible';
+        document.getElementById('lote-valor').value = '';
+        document.getElementById('lote-metros').value = '';
+        document.getElementById('lote-medida').value = 'm²';
+        document.getElementById('lote-localidad').value = 'San Quintín';
+        document.getElementById('lote-foto-base64').value = '';
+        document.getElementById('lote-foto-preview').innerHTML = '<span id="lote-foto-placeholder">📷 Toca para agregar foto</span>';
+        document.getElementById('lote-actions').innerHTML = `
+          <button class="lote-btn lote-btn-cancel" onclick="closeLotePanel()">🗑️ Cancelar</button>
+          <button class="lote-btn lote-btn-save" id="lote-btn-save" onclick="guardarLote()">💾 Guardar Lote</button>
+        `;
+      }
+
+      document.getElementById('lote-coords').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      document.getElementById('lote-panel-bg').classList.add('open');
+    }
+
+    function closeLotePanel() {
+      document.getElementById('lote-panel-bg').classList.remove('open');
+      currentLoteId = null;
+      currentLoteLat = null;
+      currentLoteLng = null;
+      removerMarcadorTemporal();
+    }
+
+    // ═══════════════════════════════════════════
+    // FOTO
+    // ═══════════════════════════════════════════
+    function handleFotoSeleccionada(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('lote-foto-base64').value = e.target.result;
+          document.getElementById('lote-foto-preview').innerHTML = `<img src="${e.target.result}" alt="Foto lote">`;
+        };
+        reader.readAsDataURL(input.files[0]);
+        input.value = '';
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // GUARDAR LOTE
+    // ═══════════════════════════════════════════
+    async function guardarLote() {
+      const codigo = document.getElementById('lote-codigo').value.trim();
+      if (!codigo) {
+        mostrarToast('⚠️ El código del lote es obligatorio', '#f59e0b');
+        return;
+      }
+
+      const datos = {
+        _accion: 'upsert_lote',
+        codigolote: codigo,
+        tipopago: document.getElementById('lote-tipopago').value,
+        estado: document.getElementById('lote-estado').value,
+        valor: parseFloat(document.getElementById('lote-valor').value) || 0,
+        metros: document.getElementById('lote-metros').value,
+        medida: document.getElementById('lote-medida').value,
+        lat: currentLoteLat,
+        lng: currentLoteLng,
+        fotolote: document.getElementById('lote-foto-base64').value,
+        localidad: document.getElementById('lote-localidad').value
+      };
+
+      if (currentLoteId) datos.idLote = currentLoteId;
+
+      const btnSave = document.getElementById('lote-btn-save');
+      if (!btnSave) return;
+      const originalText = btnSave.textContent;
+      btnSave.innerHTML = '<span class="loading-spinner"></span> Guardando...';
+      btnSave.disabled = true;
+
+      try {
+        const response = await fetch(BACKEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(datos)
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          mostrarToast(currentLoteId ? '✅ Lote actualizado' : '✅ Lote guardado');
+          closeLotePanel();
+          cargarLotesDesdeBackend();
+        } else {
+          mostrarToast('❌ ' + (result.mensaje || 'Error al guardar'), '#dc2626');
+        }
+      } catch (e) {
+        mostrarToast('❌ Error de conexión', '#dc2626');
+      }
+
+      if (btnSave) {
+        btnSave.textContent = originalText;
+        btnSave.disabled = false;
+      }
+    }
+
+    async function eliminarLote() {
+      if (!currentLoteId) return;
+      if (!confirm('¿Eliminar este lote permanentemente?')) return;
+
+      try {
+        const response = await fetch(BACKEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ _accion: 'eliminar_lote', idLote: currentLoteId })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          mostrarToast('🗑️ Lote eliminado');
+          closeLotePanel();
+          cargarLotesDesdeBackend();
+        }
+      } catch (e) {
+        mostrarToast('❌ Error de conexión', '#dc2626');
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // CARGAR LOTES
+    // ═══════════════════════════════════════════
+    async function cargarLotesDesdeBackend() {
+      try {
+        const response = await fetch(BACKEND_URL + '?tipo=lotes');
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.lotes) {
+          allLotes = result.data.lotes;
+          dibujarLotesEnMapa();
+        }
+      } catch (e) {
+        console.error('Error cargando lotes:', e);
+      }
+    }
+
+    function dibujarLotesEnMapa() {
+      if (lotesLayer) map.removeLayer(lotesLayer);
+      lotesLayer = L.layerGroup().addTo(map);
+
+      allLotes.forEach(lote => {
+        const lat = parseFloat(lote.lat);
+        const lng = parseFloat(lote.lng);
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        const colores = {
+          'Disponible': '#16a34a',
+          'Apartado': '#f59e0b',
+          'Vendido': '#dc2626'
+        };
+        const color = colores[lote.estado] || '#16a34a';
+        const valorFormateado = lote.valor ? '$' + Number(lote.valor).toLocaleString('es-MX') : 'Sin precio';
+
+        const icon = L.divIcon({
+          html: `<div style="background:${color};color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:16px;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.4);">🌱</div>`,
+          className: 'pin-marker',
+          iconSize: [42, 42],
+          iconAnchor: [21, 42]
+        });
+
+        const marker = L.marker([lat, lng], { icon }).addTo(lotesLayer);
+
+        marker.bindTooltip(
+          `<b>${lote.codigolote || 'Sin código'}</b><br>${valorFormateado} · ${lote.metros || '?'} ${lote.medida || 'm²'}`,
+          { direction: 'top', offset: [0, -38], permanent: true, className: 'pin-label' }
+        );
+
+        marker.on('click', function(e) {
+          L.DomEvent.stopPropagation(e);
+          abrirPanelLote(lat, lng, lote);
+        });
+      });
+    }
+
+    // ═══════════════════════════════════════════
+    // LISTA DE LOTES
+    // ═══════════════════════════════════════════
+    function mostrarListaLotes() {
+      const body = document.getElementById('lista-lotes-body');
+
+      if (allLotes.length === 0) {
+        body.innerHTML = '<div class="no-lotes">🌱 No hay lotes registrados.<br><small>Toca cualquier punto del mapa para agregar uno.</small></div>';
+      } else {
+        body.innerHTML = allLotes.map(lote => {
+          const colores = {
+            'Disponible': '#16a34a',
+            'Apartado': '#f59e0b',
+            'Vendido': '#dc2626'
+          };
+          const color = colores[lote.estado] || '#16a34a';
+          const valorFormateado = lote.valor ? '$' + Number(lote.valor).toLocaleString('es-MX') : 'Sin precio';
+
+          return `
+            <div class="lote-item" onclick="irALote(${lote.lat}, ${lote.lng}, ${lote.idLote})">
+              <div class="lote-item-color" style="background:${color};color:#fff;">🌱</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:14px;">${lote.codigolote || 'Sin código'}</div>
+                <div style="font-size:11px;color:#888;">${lote.estado || 'Disponible'} · ${valorFormateado}</div>
+                <div style="font-size:10px;color:#aaa;">📍 ${lote.localidad || 'San Quintín'} · ${lote.metros || '?'} ${lote.medida || 'm²'}</div>
+              </div>
+              <div style="font-size:20px;color:#ccc;">›</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('lista-lotes-bg').classList.add('open');
+    }
+
+    function closeListaLotes() {
+      document.getElementById('lista-lotes-bg').classList.remove('open');
+    }
+
+    function irALote(lat, lng, idLote) {
+      closeListaLotes();
+      map.setView([lat, lng], 17, { animate: true });
+      setTimeout(() => {
+        const lote = allLotes.find(l => l.idLote == idLote);
+        if (lote) abrirPanelLote(lat, lng, lote);
+      }, 500);
+    }
+
+    // ═══════════════════════════════════════════
+    // UTILIDADES
+    // ═══════════════════════════════════════════
+    function mostrarToast(mensaje, color = '#16a34a') {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = mensaje;
+      toast.style.background = color;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2600);
+    }
+
+    function centrarSanQuintin() {
+      map.setView([30.5600, -115.9500], 14, { animate: true });
+    }
+
+    function updateUserMarker() {
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.circleMarker([userLat, userLng], {
+        radius: 9, color: '#16a34a', fillColor: '#fff', weight: 3, fillOpacity: 1, zIndexOffset: 1000
+      }).addTo(map).bindTooltip('📍 Mi ubicación', { permanent: false, direction: 'top', className: 'pin-label' });
+    }
+
+    function obtenerGPS() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            userLat = pos.coords.latitude;
+            userLng = pos.coords.longitude;
+            updateUserMarker();
+            map.setView([userLat, userLng], 14, { animate: true });
+            obtenerEstadoActual();
+          },
+          () => {
+            document.getElementById('estado-actual').textContent = '📍 San Quintín, Baja California';
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      }
+    }
+
+    function refreshGPS() {
+      const btn = document.querySelector('.fab-locate');
+      if (btn) { btn.style.transform = 'rotate(360deg)'; btn.style.transition = 'transform .6s'; }
+      setTimeout(() => { if (btn) btn.style.transform = 'rotate(0deg)'; }, 600);
+      obtenerGPS();
+    }
+
+    async function obtenerEstadoActual() {
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json&addressdetails=1`);
+        const d = await r.json();
+        const estado = d.address?.state || 'Baja California';
+        const municipio = d.address?.county || d.address?.city || 'San Quintín';
+        document.getElementById('estado-actual').textContent = `📍 ${municipio}, ${estado}`;
+      } catch (e) {}
+    }
+
+    // ═══════════════════════════════════════════
+    // BÚSQUEDA
+    // ═══════════════════════════════════════════
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearBtn');
+
+    searchInput.addEventListener('input', function(e) {
+      const val = e.target.value.trim();
+      clearBtn.style.display = val ? 'block' : 'none';
+      clearTimeout(searchTimeout);
+      if (val.length < 3) { clearSearchLayer(); return; }
+      searchTimeout = setTimeout(() => buscarLugares(val), 500);
+    });
+
+    async function buscarLugares(query) {
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=mx&format=json&limit=5&addressdetails=1`);
+        const results = await r.json();
+        clearSearchLayer();
+        if (results.length === 0) return;
+        searchLayer = L.layerGroup().addTo(map);
+        const bounds = [];
+        results.forEach(p => {
+          const lat = parseFloat(p.lat), lon = parseFloat(p.lon);
+          if (isNaN(lat) || isNaN(lon)) return;
+          bounds.push([lat, lon]);
+          L.marker([lat, lon], {
+            icon: L.divIcon({
+              html: `<div style="background:#ff6900;color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4);">📍</div>`,
+              className: 'pin-marker', iconSize: [36, 36], iconAnchor: [18, 36]
+            })
+          }).addTo(searchLayer)
+            .bindPopup(`<div style="font-family:Inter;"><strong>${p.display_name.split(',')[0]}</strong><br><a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank">🗺️ Google Maps</a></div>`);
+        });
+        if (bounds.length > 0) {
+          bounds.push([userLat, userLng]);
+          map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15, animate: true });
+        }
+      } catch (e) {}
+    }
+
+    function clearSearchLayer() {
+      if (searchLayer) { map.removeLayer(searchLayer); searchLayer = null; }
+    }
+
+    function clearSearch() {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      clearSearchLayer();
+      if (userLat && userLng) map.setView([userLat, userLng], 14, { animate: true });
+    }
+
+    function startVoiceSearch() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { alert('Navegador no soporta voz'); return; }
+      const r = new SR();
+      r.lang = 'es-MX';
+      r.start();
+      r.onresult = (e) => {
+        searchInput.value = e.results[0][0].transcript;
+        clearBtn.style.display = 'block';
+        buscarLugares(e.results[0][0].transcript);
+      };
+    }
+
+    // ═══════════════════════════════════════════
+    // FULLSCREEN
+    // ═══════════════════════════════════════════
+    function toggleFullscreen() {
+      isFsMode = !isFsMode;
+      document.body.classList.toggle('fs-mode', isFsMode);
+      document.getElementById('fs-expand').style.display = isFsMode ? 'none' : 'block';
+      document.getElementById('fs-compress').style.display = isFsMode ? 'block' : 'none';
+      setTimeout(() => map.invalidateSize(), 200);
+    }
+
+    // ═══════════════════════════════════════════
+    // INICIO
+    // ═══════════════════════════════════════════
+    window.addEventListener('load', initMap);
+
+    let tapCount = 0, lastTapTime = 0;
+    document.getElementById('header-logo').addEventListener('click', () => {
+      const now = Date.now();
+      tapCount = (now - lastTapTime < 400) ? tapCount + 1 : 1;
+      lastTapTime = now;
+      if (tapCount === 3) { tapCount = 0; location.reload(); }
+    });
+  </script>
+</body>
+</html>
