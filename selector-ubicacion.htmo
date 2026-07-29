@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Seleccionar Ubicación</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            height: 100dvh; 
+            overflow: hidden; 
+            background: #000;
+        }
+        
+        #map { width: 100%; height: 100%; }
+        
+        /* BARRA SUPERIOR */
+        .top-bar {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            z-index: 1000;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border-radius: 50px;
+            padding: 4px 6px 4px 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.35);
+        }
+        
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            padding: 10px 0;
+            color: #222;
+        }
+        
+        .search-box input::placeholder {
+            color: #aaa;
+        }
+        
+        .search-btn {
+            background: #1a73e8;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            cursor: pointer;
+            font-size: 16px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .voice-btn {
+            background: #f0f0f0;
+            color: #555;
+            border: none;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            cursor: pointer;
+            font-size: 16px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* BOTÓN CAPAS */
+        .btn-layers {
+            position: absolute;
+            top: 80px;
+            right: 12px;
+            z-index: 1000;
+            background: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,.25);
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* COORDENADAS */
+        .coords-display {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(0,0,0,.8);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: monospace;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        
+        /* PIN CENTRAL */
+        .pin-centro {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -100%);
+            z-index: 999;
+            pointer-events: none;
+            font-size: 40px;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
+        }
+        
+        /* BOTONES INFERIORES */
+        .bottom-bar {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,.3);
+            transition: transform .15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:active { transform: scale(.95); }
+        
+        .btn-confirm {
+            background: #16a34a;
+            color: #fff;
+        }
+        
+        .btn-cancel {
+            background: #fff;
+            color: #333;
+        }
+        
+        .btn-gps {
+            position: absolute;
+            bottom: 100px;
+            right: 16px;
+            z-index: 1000;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #fff;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* TOAST */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #16a34a;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 9999;
+            box-shadow: 0 4px 15px rgba(0,0,0,.3);
+            animation: fadeInOut 2s ease forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            75% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <!-- PIN CENTRAL FIJO -->
+    <div class="pin-centro">📍</div>
+    
+    <!-- BARRA DE BÚSQUEDA -->
+    <div class="top-bar">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Buscar localidad, ciudad, pueblo..." autocomplete="off">
+            <button class="voice-btn" onclick="buscarPorVoz()" title="Búsqueda por voz">🎤</button>
+            <button class="search-btn" onclick="buscarLocalidad()" title="Buscar">🔍</button>
+        </div>
+    </div>
+    
+    <!-- BOTÓN CAPAS -->
+    <button class="btn-layers" id="btnLayers" onclick="cambiarCapa()">🛰️ Satélite</button>
+    
+    <!-- BOTÓN GPS -->
+    <button class="btn-gps" onclick="irAMiUbicacion()" title="Mi ubicación">📍</button>
+    
+    <!-- COORDENADAS -->
+    <div class="coords-display" id="coordsDisplay">📍 Mueve el mapa para colocar el pin</div>
+    
+    <!-- BOTONES CONFIRMAR/CANCELAR -->
+    <div class="bottom-bar">
+        <button class="btn btn-cancel" onclick="cancelar()">❌ Cancelar</button>
+        <button class="btn btn-confirm" onclick="confirmarUbicacion()">✅ Confirmar Ubicación</button>
+    </div>
+
+    <script>
+        let map;
+        let capaCalle;
+        let capaSatelite;
+        let capaActual = 'calle';
+        
+        function initMap() {
+            // Capas
+            capaCalle = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            });
+            
+            capaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19,
+                attribution: '© Esri, Maxar'
+            });
+            
+            // Mapa
+            map = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([30.56, -115.95], 15);
+            
+            capaCalle.addTo(map);
+            
+            // Zoom control abajo izquierda
+            L.control.zoom({ position: 'bottomleft' }).addTo(map);
+            
+            // Actualizar coordenadas al mover
+            map.on('move', actualizarCoordenadas);
+            actualizarCoordenadas();
+            
+            // Intentar obtener GPS al iniciar
+            obtenerGPS();
+        }
+        
+        function actualizarCoordenadas() {
+            const centro = map.getCenter();
+            const lat = centro.lat.toFixed(6);
+            const lng = centro.lng.toFixed(6);
+            document.getElementById('coordsDisplay').textContent = `📍 ${lat}, ${lng}`;
+        }
+        
+        function cambiarCapa() {
+            if (capaActual === 'calle') {
+                map.removeLayer(capaCalle);
+                capaSatelite.addTo(map);
+                capaActual = 'satelite';
+                document.getElementById('btnLayers').textContent = '🗺️ Calle';
+            } else {
+                map.removeLayer(capaSatelite);
+                capaCalle.addTo(map);
+                capaActual = 'calle';
+                document.getElementById('btnLayers').textContent = '🛰️ Satélite';
+            }
+        }
+        
+        function obtenerGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        map.setView([pos.coords.latitude, pos.coords.longitude], 17, { animate: true });
+                        mostrarToast('📍 Ubicación encontrada');
+                    },
+                    () => {
+                        mostrarToast('⚠️ No se pudo obtener tu ubicación');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            }
+        }
+        
+        function irAMiUbicacion() {
+            obtenerGPS();
+        }
+        
+        async function buscarLocalidad() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                mostrarToast('⚠️ Escribe una localidad para buscar');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=mx&format=json&limit=1&addressdetails=1`);
+                const results = await response.json();
+                
+                if (results.length > 0) {
+                    const lat = parseFloat(results[0].lat);
+                    const lon = parseFloat(results[0].lon);
+                    map.setView([lat, lon], 16, { animate: true });
+                    mostrarToast('✅ ' + results[0].display_name.split(',')[0]);
+                } else {
+                    mostrarToast('🔍 No se encontró la localidad');
+                }
+            } catch (e) {
+                mostrarToast('❌ Error al buscar');
+            }
+        }
+        
+        function buscarPorVoz() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) {
+                mostrarToast('⚠️ Navegador no soporta voz');
+                return;
+            }
+            
+            const recognition = new SR();
+            recognition.lang = 'es-MX';
+            recognition.start();
+            
+            recognition.onresult = (e) => {
+                const texto = e.results[0][0].transcript;
+                document.getElementById('searchInput').value = texto;
+                buscarLocalidad();
+            };
+            
+            recognition.onerror = () => {
+                mostrarToast('❌ Error en búsqueda por voz');
+            };
+        }
+        
+        function confirmarUbicacion() {
+            const centro = map.getCenter();
+            const datos = {
+                lat: centro.lat,
+                lng: centro.lng,
+                latStr: centro.lat.toFixed(6),
+                lngStr: centro.lng.toFixed(6)
+            };
+            
+            // Guardar en localStorage
+            localStorage.setItem('ubicacionSeleccionada', JSON.stringify(datos));
+            
+            mostrarToast('✅ Ubicación guardada');
+            
+            // Regresar a la página anterior después de 1 segundo
+            setTimeout(() => {
+                window.location.href = 'generador.html';
+            }, 800);
+        }
+        
+        function cancelar() {
+            window.location.href = 'generador.html';
+        }
+        
+        function mostrarToast(mensaje) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = mensaje;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+        
+        // Enter para buscar
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                buscarLocalidad();
+            }
+        });
+        
+        window.addEventListener('load', initMap);
+    </script>
+</body>
+</html>
