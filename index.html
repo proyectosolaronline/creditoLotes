@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Admin Lotes — SimPréstamo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --v:#00e5b0; --v2:#00c49a; --a:#0f4c81; --a2:#1a6db5;
+  --bg:#07101e; --bg2:#0c1d30; --bg3:#102038; --bd:#1e3a58;
+  --tx:#a8c8e8; --wh:#e8f4ff; --rd:#ff4d6d; --am:#ffc107;
+  --r:14px; --r2:10px; --r3:8px; --sh:0 8px 32px rgba(0,0,0,.45);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
+  min-height:100vh;overflow-x:hidden;padding:0 12px 80px;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 0% 0%,rgba(0,229,176,.06) 0%,transparent 60%);
+}
+.topbar{
+  position:sticky;top:0;z-index:300;background:rgba(7,16,30,.97);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:10px;padding:0 16px;height:56px;margin:0 -12px;
+}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--v);flex:1}
+.logo span{color:var(--wh)}
+.chip-user{
+  font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:20px;
+  background:rgba(0,229,176,.1);border:1px solid rgba(0,229,176,.25);
+  color:var(--v);white-space:nowrap;cursor:pointer;letter-spacing:.03em;
+  transition:all .2s;flex-shrink:0;
+}
+.chip-user:hover{background:rgba(255,77,109,.15);border-color:rgba(255,77,109,.3);color:var(--rd)}
+.app{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:14px 0}
+.card{
+  background:var(--bg3);border:1px solid var(--bd);
+  border-radius:var(--r);padding:16px;box-shadow:var(--sh);margin-bottom:14px;
+}
+.card-titulo{
+  font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--wh);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.campo{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.campo label{font-size:.7rem;font-weight:700;color:var(--v);text-transform:uppercase;letter-spacing:.07em}
+.campo input,.campo select,.campo textarea{
+  background:rgba(255,255,255,.05);border:1px solid var(--bd);
+  border-radius:var(--r3);color:var(--wh);font-family:'DM Sans',sans-serif;
+  font-size:.92rem;padding:10px 12px;outline:none;width:100%;
+}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--v);background:rgba(0,229,176,.04)}
+.campo select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e5b0' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;appearance:none}
+.campo select option{background:var(--bg3);color:var(--wh)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 18px;border-radius:var(--r2);font-family:'DM Sans',sans-serif;
+  font-size:.85rem;font-weight:600;border:none;cursor:pointer;transition:all .2s;
+  white-space:nowrap;min-height:42px;
+}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,var(--v),var(--v2));color:var(--bg)}
+.btn-primary:hover:not(:disabled){box-shadow:0 6px 20px rgba(0,229,176,.3)}
+.btn-azul{background:linear-gradient(135deg,var(--a),var(--a2));color:#fff}
+.btn-rojo{background:rgba(255,77,109,.15);border:1px solid rgba(255,77,109,.3);color:var(--rd)}
+.btn-ghost{background:rgba(255,255,255,.06);border:1px solid var(--bd);color:var(--tx)}
+.btn-sm{padding:7px 12px;font-size:.76rem;min-height:34px}
+.btn-full{width:100%}
+.fila-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:.65rem;font-weight:700;padding:3px 8px;border-radius:20px}
+.badge-ok{background:rgba(0,229,176,.12);border:1px solid rgba(0,229,176,.28);color:var(--v)}
+.badge-p{background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.3);color:var(--am)}
+.badge-rd{background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.3);color:var(--rd)}
+.lote-row{
+  background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);
+  padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
+  transition:border-color .2s;
+}
+.lote-row:hover{border-color:rgba(0,229,176,.25)}
+.lote-info{flex:1;min-width:0}
+.lote-codigo{font-weight:700;color:var(--wh);font-size:.9rem}
+.lote-meta{font-size:.72rem;color:var(--tx);opacity:.7;margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+.lote-acciones{display:flex;gap:6px;flex-shrink:0}
+.empty{text-align:center;padding:30px 20px;color:var(--tx);opacity:.45}
+.form-overlay{
+  position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+.form-overlay.open{opacity:1;pointer-events:all}
+.form-panel{
+  background:var(--bg3);border:1px solid var(--bd);border-radius:22px 22px 0 0;
+  padding:0;width:100%;max-width:560px;max-height:90dvh;display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);
+  overflow:hidden;
+}
+.form-overlay.open .form-panel{transform:translateY(0)}
+.form-handle{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:12px auto 0;flex-shrink:0}
+.form-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px 12px;border-bottom:1px solid var(--bd);flex-shrink:0;
+}
+.form-header h2{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--wh)}
+.form-body{overflow-y:auto;padding:16px 18px 24px;flex:1}
+.form-footer{padding:14px 18px;border-top:1px solid var(--bd);flex-shrink:0;background:var(--bg3)}
+.toast-container{position:fixed;bottom:20px;right:12px;z-index:9999;display:flex;flex-direction:column;gap:7px;max-width:calc(100vw-24px)}
+.toast{
+  background:var(--bd);border-radius:var(--r2);padding:10px 14px;
+  display:flex;align-items:center;gap:8px;font-size:.82rem;
+  animation:in .28s ease;box-shadow:0 8px 24px rgba(0,0,0,.5);
+}
+.toast.ok{border-left:3px solid var(--v)}
+.toast.err{border-left:3px solid var(--rd)}
+@keyframes in{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--v);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(min-width:600px){
+  .form-overlay{align-items:center}
+  .form-panel{border-radius:16px;margin:20px;max-height:88vh}
+  .form-handle{display:none}
+}
+
+/* ══════════════ LOGIN ══════════════ */
+#login-overlay{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;transition:opacity .4s ease;
+}
+#login-overlay.oculto{opacity:0;pointer-events:none;}
+.login-box{
+  width:100%;max-width:380px;
+  background:var(--bg3);border:1px solid var(--bd);
+  border-radius:20px;padding:32px 28px 28px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  position:relative;overflow:hidden;
+}
+.login-box::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,229,176,.07),transparent 70%);
+  pointer-events:none;
+}
+.login-logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;
+  color:var(--v);text-align:center;margin-bottom:4px;
+}
+.login-logo span{color:var(--wh)}
+.login-sub{text-align:center;font-size:.78rem;color:var(--tx);opacity:.6;margin-bottom:28px}
+.login-err{
+  background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);
+  color:var(--rd);border-radius:var(--r3);padding:10px 13px;
+  font-size:.82rem;margin-bottom:14px;display:none;
+}
+.login-err.visible{display:flex;align-items:center;gap:8px}
+.btn-login{
+  width:100%;padding:14px;border-radius:var(--r2);
+  background:linear-gradient(135deg,var(--v),var(--v2));
+  color:var(--bg);font-family:'DM Sans',sans-serif;
+  font-size:.95rem;font-weight:700;border:none;
+  cursor:pointer;transition:all .2s;margin-top:6px;min-height:50px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-login:hover:not(:disabled){box-shadow:0 8px 24px rgba(0,229,176,.35)}
+.btn-login:disabled{opacity:.5;cursor:not-allowed}
+.login-footer{text-align:center;font-size:.72rem;color:var(--tx);opacity:.4;margin-top:18px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN OVERLAY ══════════════ -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">Admin<span>Lotes</span></div>
+    <div class="login-sub">🔐 Acceso restringido — SimPréstamo</div>
+    <div class="login-err" id="login-err">
+      <span>❌</span><span id="login-err-msg">Usuario o contraseña incorrectos</span>
+    </div>
+    <div class="campo">
+      <label>Usuario</label>
+      <input type="text" id="login-usuario" placeholder="tu@correo.com o usuario"
+        autocomplete="username" autocapitalize="none" spellcheck="false"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    </div>
+    <div class="campo">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••"
+        autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">🔓 Ingresar</button>
+    <div class="login-footer">SimPréstamo v4 · Acceso restringido</div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="logo">Sim<span>Préstamo</span> <span style="font-size:.7rem;color:var(--tx);font-weight:400;margin-left:4px">| Admin Lotes</span></div>
+  <span class="chip-user" id="chip-usuario" onclick="confirmarCerrarSesion()" title="Cerrar sesión">👤 —</span>
+</div>
+
+<div class="app">
+  <div class="card">
+    <div class="card-titulo">🏞️ Administrador de Lotes</div>
+    <button class="btn btn-primary btn-full" onclick="abrirFormLote()" style="margin-bottom:14px">
+      ＋ Nuevo Lote
+    </button>
+    <button class="btn btn-azul btn-full" onclick="cargarLotes()" style="margin-bottom:14px">
+      🔄 Cargar Lotes
+    </button>
+    <div id="lista-lotes">
+      <div class="empty"><div class="spinner"></div><p style="margin-top:12px">Cargando...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- FORMULARIO -->
+<div class="form-overlay" id="form-overlay">
+  <div class="form-panel">
+    <div class="form-handle"></div>
+    <div class="form-header">
+      <h2 id="form-titulo">➕ Nuevo Lote</h2>
+      <button class="btn btn-ghost btn-sm" onclick="cerrarFormLote()">✕</button>
+    </div>
+    <div class="form-body">
+      <input type="hidden" id="lote-id">
+      <div class="g2">
+        <div class="campo">
+          <label>Código de Lote *</label>
+          <input type="text" id="lote-codigo" placeholder="Ej: L-001">
+        </div>
+        <div class="campo">
+          <label>Tipo de Pago</label>
+          <select id="lote-tipopago">
+            <option value="Contado">Contado</option>
+            <option value="Crédito">Crédito</option>
+            <option value="Financiamiento">Financiamiento</option>
+          </select>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="campo">
+          <label>Estado</label>
+          <select id="lote-estado">
+            <option value="Disponible">✅ Disponible</option>
+            <option value="Apartado">🔒 Apartado</option>
+            <option value="Vendido">❌ Vendido</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label>Valor ($)</label>
+          <input type="number" id="lote-valor" placeholder="150000" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="g2">
+        <div class="campo">
+          <label>Metros</label>
+          <input type="text" id="lote-metros" placeholder="120">
+        </div>
+        <div class="campo">
+          <label>Medida</label>
+          <input type="text" id="lote-medida" placeholder="10x12">
+        </div>
+      </div>
+      <div class="g2">
+        <div class="campo">
+          <label>Latitud</label>
+          <input type="text" id="lote-lat" placeholder="20.5888">
+        </div>
+        <div class="campo">
+          <label>Longitud</label>
+          <input type="text" id="lote-lng" placeholder="-100.3899">
+        </div>
+      </div>
+      <div class="campo">
+        <label>Localidad</label>
+        <input type="text" id="lote-localidad" placeholder="Ej: Querétaro Centro">
+      </div>
+      <div class="campo">
+        <label>URL Foto (opcional)</label>
+        <input type="text" id="lote-foto" placeholder="https://...">
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-primary btn-full" onclick="guardarLote()">💾 Guardar Lote</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbw83md07bzx1UmGRn51i-pRiuvQaEig_mUWS4VjvO0yTIlDCULqT8p3NGsSe2S4nZhzjA/exec';
+const SESSION_KEY = 'simprestamo_session_v1';
+
+let todosLotes = [];
+let loteEditando = null;
+
+// ══════════════ LOGIN ══════════════
+function getSession(){
+  try{ return JSON.parse(sessionStorage.getItem(SESSION_KEY)); }catch{ return null; }
+}
+function setSession(data){
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+}
+function clearSession(){
+  sessionStorage.removeItem(SESSION_KEY);
+}
+function mostrarLoginError(msg){
+  document.getElementById('login-err-msg').textContent = msg;
+  document.getElementById('login-err').classList.add('visible');
+}
+function ocultarLoginError(){
+  document.getElementById('login-err').classList.remove('visible');
+}
+async function doLogin(){
+  const usuario = document.getElementById('login-usuario').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if(!usuario || !pass){ mostrarLoginError('Completa usuario y contraseña'); return; }
+  ocultarLoginError();
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px;margin:0"></div> Verificando...';
+  try {
+    const url = `${GAS_URL}?tipo=login&usuario=${encodeURIComponent(usuario)}&password=${encodeURIComponent(pass)}`;
+    const r = await fetch(url, {redirect:'follow'});
+    const d = await r.json();
+    if(d?.success && d.data?.autorizado){
+      const sesion = {
+        usuario: d.data.usuario || usuario,
+        nombre: d.data.nombre || usuario,
+        rol: d.data.rol || 'Asesor',
+        ts: Date.now()
+      };
+      setSession(sesion);
+      aplicarSesion(sesion);
+      const overlay = document.getElementById('login-overlay');
+      overlay.style.opacity = '0';
+      setTimeout(() => { overlay.style.display = 'none'; }, 400);
+      toast('👋 Bienvenido, ' + sesion.nombre, 'ok', 4000);
+      cargarLotes();
+    } else {
+      mostrarLoginError(d?.mensaje || d?.error || 'Usuario o contraseña incorrectos');
+    }
+  } catch(e){
+    mostrarLoginError('Error de conexión. Revisa tu internet.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔓 Ingresar';
+  }
+}
+function aplicarSesion(sesion){
+  const chip = document.getElementById('chip-usuario');
+  if(chip) chip.textContent = '👤 ' + (sesion.nombre || sesion.usuario);
+}
+function confirmarCerrarSesion(){
+  if(confirm('¿Cerrar sesión de ' + (getSession()?.nombre || 'usuario') + '?')){
+    doLogout();
+  }
+}
+function doLogout(){
+  clearSession();
+  location.reload();
+}
+function checkAuth(){
+  const sesion = getSession();
+  if(sesion && sesion.ts){
+    document.getElementById('login-overlay').style.display = 'none';
+    aplicarSesion(sesion);
+    cargarLotes();
+  } else {
+    setTimeout(() => document.getElementById('login-usuario').focus(), 300);
+  }
+}
+
+// ══════════════ UTILIDADES ══════════════
+function toast(msg,tipo='ok',dur=3500){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className='toast '+tipo;
+  t.innerHTML='<span>'+(tipo==='ok'?'✅':'❌')+'</span><span>'+msg+'</span>';
+  c.appendChild(t);
+  setTimeout(()=>t.style.opacity='0',dur-400);
+  setTimeout(()=>t.remove(),dur);
+}
+
+function fmt(n){
+  if(n===null||n===undefined||n===''||n===0) return '—';
+  return '$'+Number(n).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function badge(estado){
+  const m={
+    'Disponible':['badge-ok','✅ Disponible'],
+    'Apartado':['badge-p','🔒 Apartado'],
+    'Vendido':['badge-rd','❌ Vendido'],
+  };
+  const [cls,lbl]=m[estado]||['badge-p',estado];
+  return '<span class="badge '+cls+'">'+lbl+'</span>';
+}
+
+async function fetchGAS(tipo){
+  try{
+    const r=await fetch(GAS_URL+'?tipo='+tipo,{redirect:'follow'});
+    return await r.json();
+  }catch(e){console.error(e);return null;}
+}
+
+async function postGAS(payload){
+  try{
+    const r=await fetch(GAS_URL,{
+      method:'POST',redirect:'follow',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(payload)
+    });
+    return await r.json();
+  }catch(e){console.error(e);return null;}
+}
+
+async function cargarLotes(){
+  var div = document.getElementById('lista-lotes');
+  div.innerHTML = '<div class="empty"><div class="spinner"></div><p>Cargando...</p></div>';
+
+  var datos = await fetchGAS('lotes');
+
+  if(!datos || !datos.success){
+    div.innerHTML = '<div class="empty"><p>Error al cargar lotes</p></div>';
+    return;
+  }
+
+  var crudos = datos.data.lotes || [];
+
+  if (crudos.length > 0 && Array.isArray(crudos[0])) {
+    todosLotes = crudos.map(function(arr){
+      return {
+        id: arr[0], codigo: arr[1], tipoPago: arr[2], estado: arr[3] || 'Disponible',
+        valor: Number(arr[4]) || 0, metros: arr[5], medida: arr[6],
+        lat: arr[7], lng: arr[8], fecha: arr[9], foto: arr[10], localidad: arr[11] || ''
+      };
+    });
+  } else {
+    todosLotes = crudos.map(function(obj){
+      return {
+        id: obj.idLote || obj.IdLote || obj.id,
+        codigo: obj.codigolote || obj.codigo || '',
+        tipoPago: obj.tipopago || obj.tipoPago || '',
+        estado: obj.estado || 'Disponible',
+        valor: Number(obj.valor) || 0,
+        metros: obj.metros || '',
+        medida: obj.medida || '',
+        lat: obj.lat || '',
+        lng: obj.lng || '',
+        fecha: obj.fecha || '',
+        foto: obj.fotolote || obj.foto || '',
+        localidad: obj.localidad || obj.Localidad || ''
+      };
+    });
+  }
+  renderLotes();
+  toast(todosLotes.length + ' lotes cargados', 'ok');
+}
+
+function renderLotes(){
+  const div=document.getElementById('lista-lotes');
+  if(!todosLotes.length){
+    div.innerHTML='<div class="empty"><p>Sin lotes registrados</p></div>';
+    return;
+  }
+
+  let html = `
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:.78rem">
+    <thead>
+      <tr style="background:var(--a);color:#fff">
+        <th style="padding:8px;text-align:left">Código</th>
+        <th style="padding:8px;text-align:left">Tipo Pago</th>
+        <th style="padding:8px;text-align:left">Estado</th>
+        <th style="padding:8px;text-align:right">Valor</th>
+        <th style="padding:8px;text-align:right">Metros</th>
+        <th style="padding:8px;text-align:left">Medida</th>
+        <th style="padding:8px;text-align:left">Localidad</th>
+        <th style="padding:8px;text-align:center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  todosLotes.forEach(function(l,i){
+    const bg = i%2===0 ? 'var(--bg3)' : 'var(--bg2)';
+    html += `
+      <tr style="background:'+bg+';border-bottom:1px solid var(--bd)">
+        <td style="padding:8px;color:var(--wh);font-weight:600">'+ (l.codigo||'—') +'</td>
+        <td style="padding:8px">'+ (l.tipoPago||'—') +'</td>
+        <td style="padding:8px">'+ badge(l.estado) +'</td>
+        <td style="padding:8px;text-align:right;color:var(--v);font-weight:600">'+ (l.valor?fmt(l.valor):'—') +'</td>
+        <td style="padding:8px;text-align:right">'+ (l.metros||'—') +'</td>
+        <td style="padding:8px">'+ (l.medida||'—') +'</td>
+        <td style="padding:8px">'+ (l.localidad||'—') +'</td>
+        <td style="padding:8px;text-align:center">
+          <button class="btn btn-azul btn-sm" style="margin-right:4px" onclick="editarLote('+ JSON.stringify(l).replace(/'/g,"&#39;") +')">Editar</button>
+          <button class="btn btn-rojo btn-sm" onclick="eliminarLote(\''+ l.id +'\',\''+ (l.codigo||'Sin código').replace(/'/g,"\\'") +'\')">Eliminar</button>
+        </td>
+      </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  div.innerHTML = html;
+}
+
+function abrirFormLote(){
+  loteEditando=null;
+  document.getElementById('form-titulo').textContent='➕ Nuevo Lote';
+  ['lote-id','lote-codigo','lote-metros','lote-medida','lote-lat','lote-lng','lote-localidad','lote-foto'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('lote-tipopago').value='Contado';
+  document.getElementById('lote-estado').value='Disponible';
+  document.getElementById('lote-valor').value='';
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+function editarLote(l){
+  loteEditando=l;
+  document.getElementById('form-titulo').textContent='✏️ Editar: '+(l.codigo||'Lote');
+  document.getElementById('lote-id').value=l.id||'';
+  document.getElementById('lote-codigo').value=l.codigo||'';
+  document.getElementById('lote-tipopago').value=l.tipoPago||'Contado';
+  document.getElementById('lote-estado').value=l.estado||'Disponible';
+  document.getElementById('lote-valor').value=l.valor||'';
+  document.getElementById('lote-metros').value=l.metros||'';
+  document.getElementById('lote-medida').value=l.medida||'';
+  document.getElementById('lote-lat').value=l.lat||'';
+  document.getElementById('lote-lng').value=l.lng||'';
+  document.getElementById('lote-localidad').value=l.localidad||'';
+  document.getElementById('lote-foto').value=l.foto||'';
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+function cerrarFormLote(){
+  document.getElementById('form-overlay').classList.remove('open');
+  loteEditando=null;
+}
+
+async function guardarLote(){
+  const codigo=document.getElementById('lote-codigo').value.trim();
+  if(!codigo){toast('El código de lote es obligatorio','err');return;}
+
+  const payload={
+    _accion:'upsert_lote',
+    codigolote:codigo,
+    tipopago:document.getElementById('lote-tipopago').value,
+    estado:document.getElementById('lote-estado').value,
+    valor:Number(document.getElementById('lote-valor').value)||0,
+    metros:document.getElementById('lote-metros').value,
+    medida:document.getElementById('lote-medida').value,
+    lat:document.getElementById('lote-lat').value,
+    lng:document.getElementById('lote-lng').value,
+    localidad:document.getElementById('lote-localidad').value,
+    fotolote:document.getElementById('lote-foto').value,
+  };
+  if(loteEditando?.id) payload.idLote=loteEditando.id;
+
+  const btn=document.querySelector('#form-overlay .btn-primary');
+  btn.disabled=true;btn.textContent='Guardando...';
+  const r=await postGAS(payload);
+  btn.disabled=false;btn.textContent='💾 Guardar Lote';
+
+  if(r?.success){
+    toast(loteEditando?'✅ Lote actualizado':'✅ Lote creado','ok');
+    cerrarFormLote();
+    cargarLotes();
+  }else{
+    toast(r?.mensaje||r?.message||'Error al guardar','err');
+  }
+}
+
+async function eliminarLote(id,codigo){
+  if(!confirm('¿Eliminar el lote "'+codigo+'"?\nEsta acción no se puede deshacer.')) return;
+  const r=await postGAS({_accion:'eliminar_lote',idLote:id});
+  if(r?.success){
+    toast('🗑 "'+codigo+'" eliminado','ok');
+    cargarLotes();
+  }else{
+    toast(r?.mensaje||r?.message||'Error al eliminar','err');
+  }
+}
+
+// Cerrar formulario con click fuera
+document.getElementById('form-overlay').addEventListener('click',function(e){
+  if(e.target===this) cerrarFormLote();
+});
+
+// ══════════════ INICIO ══════════════
+window.addEventListener('load', checkAuth);
+console.log('✅ Admin Lotes con login cargado');
+</script>
+</body>
+</html>
