@@ -178,12 +178,15 @@
             return { primary: '#FF9900', secondary: '#232F3E', dark: '#131A22', light: '#FFF', gradient: 'linear-gradient(135deg, #FF9900, #FF8C00)' };
         }
 
-        function togglePegarDatos() {
-            const s = document.getElementById('pegar-section');
-            s.style.display = s.style.display === 'block' ? 'none' : 'block';
-            if (s.style.display === 'block') document.getElementById('pegar-texto').focus();
-        }
-
+  function togglePegarDatos() {
+    var section = document.getElementById('pegar-section');
+    if (section.style.display === 'none' || section.style.display === '') {
+        section.style.display = 'block';
+        document.getElementById('pegar-texto').focus();
+    } else {
+        section.style.display = 'none';
+    }
+}
         function procesarPegado() {
             const texto = document.getElementById('pegar-texto').value.trim();
             if (!texto) { mostrarToast('⚠️ Pega los datos primero', '#f59e0b'); return; }
