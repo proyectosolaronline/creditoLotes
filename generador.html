@@ -91,6 +91,7 @@
             <div class="form-row"><div class="form-group"><label>Foto 4</label><div class="file-upload" onclick="document.getElementById('foto4-input').click()"><div>📁 Subir</div><img id="foto4-preview" style="display:none;"></div><input type="file" id="foto4-input" accept="image/*" style="display:none;" onchange="previewImage(this,'foto4-preview','foto4')"></div><div class="form-group"><label>Descripción Foto 4</label><input type="text" id="desc4" placeholder="Ej: Vista posterior"></div></div>
         </div>
         <div class="section">
+                        <button class="btn btn-primary" onclick="guardarCatalogoEnSheet()" style="margin-top:8px;">💾 Guardar Catálogo en Sheet</button>
             <div class="section-title"><span>🎨</span> Estilo</div>
             <div class="estilo-selector"><div class="estilo-option amazon seleccionado" id="estilo-amazon" onclick="seleccionarEstilo('amazon')">🟠 Amazon</div><div class="estilo-option mercado" id="estilo-mercado" onclick="seleccionarEstilo('mercado')">🟡 Mercado Libre</div></div>
             <input type="hidden" id="estilo-seleccionado" value="amazon">
@@ -177,7 +178,25 @@
         function descargarArchivo(n,c){var b=new Blob([c],{type:'text/html'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
         function mostrarToast(m,col){col=col||'#16a34a';var t=document.createElement('div');t.className='toast';t.textContent=m;t.style.background=col;document.body.appendChild(t);setTimeout(function(){t.remove()},3000)}
         function restaurarDatosFormulario(){var g=localStorage.getItem('datosFormulario');if(g){try{var d=JSON.parse(g);if(d.nombre)document.getElementById('nombre-empresa').value=d.nombre||'';if(d.eslogan)document.getElementById('eslogan').value=d.eslogan||'';if(d.descripcion)document.getElementById('descripcion').value=d.descripcion||'';if(d.direccion)document.getElementById('direccion').value=d.direccion||'';if(d.telefono)document.getElementById('telefono').value=d.telefono||'';if(d.whatsapp)document.getElementById('whatsapp').value=d.whatsapp||'';if(d.email)document.getElementById('email').value=d.email||'';if(d.facebook)document.getElementById('facebook').value=d.facebook||'';if(d.horarios)document.getElementById('horarios').value=d.horarios||'';if(d.logo){logoBase64=d.logo;document.getElementById('logo-preview').src=d.logo;document.getElementById('logo-preview').style.display='block'}if(d.foto){fotoBase64=d.foto;document.getElementById('foto-preview').src=d.foto;document.getElementById('foto-preview').style.display='block'}}catch(e){}}}
-        async function cargarFotosDesdeSheet(){
+               async function guardarCatalogoEnSheet(){
+            var url=document.getElementById('sheet-url').value.trim();
+            if(!url){mostrarToast('⚠️ Ingresa la URL del Sheet primero','#f59e0b');return;}
+            if(!foto1Base64&&!foto2Base64&&!foto3Base64&&!foto4Base64){mostrarToast('⚠️ No hay fotos para guardar','#f59e0b');return;}
+            try{
+                var r=await fetch(url,{method:'POST',body:JSON.stringify({
+                    _accion:'guardar_catalogo',
+                    idUsuario:'1',
+                    foto1:foto1Base64,desc1:document.getElementById('desc1').value.trim(),
+                    foto2:foto2Base64,desc2:document.getElementById('desc2').value.trim(),
+                    foto3:foto3Base64,desc3:document.getElementById('desc3').value.trim(),
+                    foto4:foto4Base64,desc4:document.getElementById('desc4').value.trim()
+                })});
+                var d=await r.json();
+                if(d.success){mostrarToast('✅ Catálogo guardado en Sheet')}else{mostrarToast('❌ Error al guardar','#dc2626')}
+            }catch(e){mostrarToast('❌ Error de conexión','#dc2626')}
+        }
+            
+            async function cargarFotosDesdeSheet(){
     var url=document.getElementById('sheet-url').value.trim();
     if(!url)return;
     try{
