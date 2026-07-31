@@ -362,24 +362,19 @@
             };
         }
         
-        function confirmarUbicacion() {
-            const centro = map.getCenter();
-            const datos = {
-                lat: centro.lat,
-                lng: centro.lng,
-                latStr: centro.lat.toFixed(6),
-                lngStr: centro.lng.toFixed(6)
-            };
-            
-            // Guardar en localStorage
-            localStorage.setItem('ubicacionSeleccionada', JSON.stringify(datos));
-            
-            mostrarToast('✅ Ubicación guardada');
-            
-            // Regresar a la página anterior después de 1 segundo
-          window.location.href = 'generador.html';
-        }
-        
+function confirmarUbicacion() {
+    const centro = map.getCenter();
+    const datos = {
+        lat: centro.lat,
+        lng: centro.lng,
+        latStr: centro.lat.toFixed(6),
+        lngStr: centro.lng.toFixed(6)
+    };
+    
+    localStorage.setItem('ubicacionSeleccionada', JSON.stringify(datos));
+    alert('Guardado: ' + datos.latStr + ', ' + datos.lngStr);  // ← Agrega esto
+    window.location.href = 'generador.html';
+}
         function cancelar() {
             window.location.href = 'generador.html';
         }
