@@ -187,7 +187,8 @@ function leerLng(l){var v=l.lng!==undefined?l.lng:(l.Lng!==undefined?l.Lng:(l.lo
         function generarFlyerSencillo(){if(!validarUbicacion())return;guardarDatosLocal();var d=getDatosEmpresa();if(!d.nombre){mostrarToast('⚠️ El nombre es obligatorio','#f59e0b');return}var c=getColoresEstilo();var btnMsg=d.facebook?'<a href="'+d.facebook+'" target="_blank" class="btn-messenger">💬 Messenger</a>':'';var h='<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>'+d.nombre+' - '+(d.eslogan||'Bienvenidos')+'</title>\n<meta name="description" content="'+d.descripcion.substring(0,160)+'">\n<meta name="robots" content="index, follow">'+generarMetaTagsFacebook(d)+'\n<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">\n'+generarSchemaGoogle(d)+'\n<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:\'Inter\',sans-serif;color:#222;background:#fff}'+estilosCSS(c)+'</style>\n</head>\n<body>\n'+generarHeroHTML(d)+'\n'+(d.descripcion?'<div class="descripcion-texto">'+d.descripcion+'</div>':'')+'\n'+generarCatalogo(d)+'\n'+(d.direccion?'<div class="domicilio-texto">📍 '+d.direccion+'</div>':'')+'\n<div class="barra-botones">\n<a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" class="btn-comollegar" onclick="avisarWhatsApp()">📍 Cómo llegar</a>\n<a href="https://wa.me/'+(d.whatsapp?d.whatsapp.replace(/\\+/g,''):'')+'" target="_blank" class="btn-contacto">📞 WhatsApp</a>\n'+btnMsg+'\n</div>\n<div class="qr-visible"><p>📷 Escanea el QR:</p><div id="qrcode" style="display:inline-block;"></div></div>\n<div class="lightbox" id="lightbox" onclick="this.classList.remove(\'show\')"><span class="cerrar">×</span><img id="lightbox-img" src="" alt=""><p class="lightbox-desc" id="lightbox-desc"></p></div>\n<footer>© '+new Date().getFullYear()+' '+d.nombre+'</footer>\n<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>\n<script>new QRCode(document.getElementById(\'qrcode\'),{text:window.location.href,width:150,height:150});function abrirLightbox(src,desc){document.getElementById(\'lightbox-img\').src=src;document.getElementById(\'lightbox-desc\').textContent=desc||\'\';document.getElementById(\'lightbox\').classList.add(\'show\')}'+generarAvisoScript(d)+'<\/script>\n</body>\n</html>';ultimoHTML=h;var na=prompt('📝 Nombre del archivo:',d.nombre.toLowerCase().replace(/[^a-z0-9]/g,'-'));ultimoNombre=(na||d.nombre.toLowerCase().replace(/[^a-z0-9]/g,'-'))+'.html';mostrarPreview(h);descargarArchivo(ultimoNombre,h);mostrarToast('✅ '+ultimoNombre)}
 
         // ============ LANDING + MAPA INCRUSTADO ============
-      // ============ LANDING + MAPA INCRUSTADO ============
+
+// ============ LANDING + MAPA INCRUSTADO (CORREGIDO - MAPA VISIBLE AL CLIC) ============
 function generarLanding(){
     if(!validarUbicacion())return;
     guardarDatosLocal();
@@ -204,42 +205,357 @@ function generarLanding(){
         if(r)catalogoHTML=generarCatalogo(d);
     }
     
-    var h='<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>'+d.nombre+' - '+(d.eslogan||'Terrenos')+'</title>\n<meta name="description" content="'+d.descripcion.substring(0,160)+'">\n<meta name="robots" content="index, follow">'+generarMetaTagsFacebook(d)+'\n<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>\n'+generarSchemaGoogle(d)+'\n<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:\'Inter\',sans-serif;color:#222;background:#fff}'+estilosCSS(c)+'</style>\n</head>\n<body>\n'+generarHeroHTML(d)+'\n'+(d.descripcion?'<div class="descripcion-texto">'+d.descripcion+'</div>':'')+'\n'+catalogoHTML+'\n'+(d.direccion?'<div class="domicilio-texto">📍 '+d.direccion+'</div>':'')+'\n<button class="btn-vermapa" id="btn-toggle-mapa" onclick="toggleMapaLotes()">🗺️ Ver mapa de lotes ('+disponibles.length+' disponibles)</button>\n<div id="mapa-lotes-wrap" style="display:none;"><button class="btn-cerrar-mapa-full" onclick="toggleMapaLotes()">✕</button><div id="mapa-lotes"></div>\n<div class="mapa-botones"><button class="btn-ml" onclick="mostrarLista()">📋 Lotes ('+disponibles.length+')</button><button class="btn-mc" onclick="centrarUltimoLote()">📍 Último Lote</button><button class="btn-mq" onclick="mostrarQR()">▣ QR</button></div>\n<div id="panel-lotes" class="panel-lotes"><div class="panel-lotes-header"><strong>📋 Lotes disponibles ('+disponibles.length+')</strong><button onclick="cerrarPanelLotes()">✕</button></div><div id="panel-lotes-lista" class="panel-lotes-lista"></div></div>\n</div>\n<div class="barra-botones">\n<a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" class="btn-comollegar" onclick="avisarWhatsApp()">📍 Cómo llegar</a>\n<a href="https://wa.me/'+(d.whatsapp?d.whatsapp.replace(/\+/g,''):'')+'" target="_blank" class="btn-contacto">📞 WhatsApp</a>\n'+btnMsg+'\n</div>\n<div class="qr-visible"><p>📷 Escanea el QR:</p><div id="qrcode" style="display:inline-block;"></div></div>\n<div class="lightbox" id="lightbox" onclick="this.classList.remove(\'show\')"><span class="cerrar">×</span><img id="lightbox-img" src="" alt=""><p class="lightbox-desc" id="lightbox-desc"></p></div>\n<footer>© '+new Date().getFullYear()+' '+d.nombre+'</footer>\n<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>\n<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>\n<script>var LOTE='+JSON.stringify(disponibles)+';var map2,mapaInicializado=false,markersLotes=[];function normalizarCoord2(v,tipo){var n=parseFloat(v);if(isNaN(n))return NaN;var limite=(tipo===\'lat\')?90:180;var signo=n<0?-1:1;n=Math.abs(n);while(n>limite){n=n/10}return signo*n}function leerLat2(l){var v=l.lat!==undefined?l.lat:(l.Lat!==undefined?l.Lat:(l.latitud!==undefined?l.latitud:l.Latitud));return normalizarCoord2(v,\'lat\')}function leerLng2(l){var v=l.lng!==undefined?l.lng:(l.Lng!==undefined?l.Lng:(l.longitud!==undefined?l.longitud:(l.lon!==undefined?l.lon:l.Longitud)));return normalizarCoord2(v,\'lng\')}function initMap2(){map2=L.map(\'mapa-lotes\').setView([30.56,-115.95],11);\n'+
+    var h='<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>'+d.nombre+' - '+(d.eslogan||'Terrenos')+'</title>\n<meta name="description" content="'+d.descripcion.substring(0,160)+'">\n<meta name="robots" content="index, follow">'+generarMetaTagsFacebook(d)+'\n<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>\n'+generarSchemaGoogle(d)+'\n<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:\'Inter\',sans-serif;color:#222;background:#fff}'+estilosCSS(c)+'\n/* ESTILOS ADICIONALES PARA EL MAPA */\n#mapa-lotes-wrap{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9998;background:#000}\n#mapa-lotes{width:100%;height:100%}\n.mapa-botones{position:fixed;bottom:20px;left:0;right:0;z-index:10000;display:flex;gap:10px;padding:0 20px;flex-wrap:wrap;justify-content:center}\n.mapa-botones button{flex:1;min-width:100px;max-width:200px;padding:14px 10px;border-radius:25px;border:none;font-weight:700;cursor:pointer;font-size:13px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}\n.btn-ml{background:#16a34a}.btn-mc{background:#ff6900}.btn-mq{background:#333}\n.btn-cerrar-mapa-full{position:fixed;top:20px;right:20px;z-index:10001;background:#dc2626;color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}\n.btn-gps-flotante{position:fixed;bottom:120px;right:20px;z-index:10001;background:#1a73e8;color:#fff;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transition:all .3s}\n.btn-gps-flotante.activo{background:#dc2626;animation:pulse 2s infinite}\n@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,.4)}70%{box-shadow:0 0 0 20px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}\n</style>\n</head>\n<body>\n'+generarHeroHTML(d)+'\n'+(d.descripcion?'<div class="descripcion-texto">'+d.descripcion+'</div>':'')+'\n'+catalogoHTML+'\n'+(d.direccion?'<div class="domicilio-texto">📍 '+d.direccion+'</div>':'')+'\n\n<!-- BOTÓN PARA ABRIR EL MAPA -->\n<button class="btn-vermapa" id="btn-toggle-mapa" onclick="abrirMapaLotes()">\n    🗺️ Ver mapa de lotes ('+disponibles.length+' disponibles)\n</button>\n\n<!-- CONTENEDOR DEL MAPA (OCULTO INICIALMENTE) -->\n<div id="mapa-lotes-wrap">\n    <button class="btn-cerrar-mapa-full" onclick="cerrarMapaLotes()">✕</button>\n    <div id="mapa-lotes"></div>\n    <button class="btn-gps-flotante" id="btn-gps-flotante" onclick="toggleGPS()" title="Activar mi ubicación">📍</button>\n    <div class="mapa-botones">\n        <button class="btn-ml" onclick="mostrarLista()">📋 Ver lista ('+disponibles.length+')</button>\n        <button class="btn-mc" onclick="centrarUltimoLote()">🏁 Último lote</button>\n        <button class="btn-mq" onclick="mostrarQR()">▣ QR</button>\n    </div>\n</div>\n\n<!-- PANEL DE LISTA DE LOTES -->\n<div id="panel-lotes" class="panel-lotes">\n    <div class="panel-lotes-header">\n        <strong>📋 Lotes disponibles ('+disponibles.length+')</strong>\n        <button onclick="cerrarPanelLotes()">✕</button>\n    </div>\n    <div id="panel-lotes-lista" class="panel-lotes-lista"></div>\n</div>\n\n<div class="barra-botones">\n<a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" class="btn-comollegar" onclick="avisarWhatsApp()">📍 Cómo llegar</a>\n<a href="https://wa.me/'+(d.whatsapp?d.whatsapp.replace(/\\+/g,''):'')+'" target="_blank" class="btn-contacto">📞 WhatsApp</a>\n'+btnMsg+'\n</div>\n<div class="qr-visible"><p>📷 Escanea el QR:</p><div id="qrcode" style="display:inline-block;"></div></div>\n<div class="lightbox" id="lightbox" onclick="this.classList.remove(\'show\')"><span class="cerrar">×</span><img id="lightbox-img" src="" alt=""><p class="lightbox-desc" id="lightbox-desc"></p></div>\n<footer>© '+new Date().getFullYear()+' '+d.nombre+'</footer>\n\n<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>\n<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>\n<script>\n'+
     
-    // CAPA SATELITAL DE ESRI
-    'L.tileLayer(\'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}\',{maxZoom:19,attribution:\'© Esri\'}).addTo(map2);\n'+
+    // PASAR DATOS DE LOTES
+    'var LOTES = '+JSON.stringify(disponibles)+';\n'+
+    'console.log("📦 Lotes cargados:", LOTES.length);\n'+
+    'if(LOTES.length > 0) console.log("🔍 Primer lote:", LOTES[0]);\n'+
     
-    // CAPA DE ETIQUETAS (calles y localidades)
-    'L.tileLayer(\'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}\',{maxZoom:19,attribution:\'© Esri\'}).addTo(map2);\n'+
+    // VARIABLES GLOBALES
+    'var map2 = null;\n'+
+    'var mapaInicializado = false;\n'+
+    'var markersLotes = [];\n'+
+    'var gpsWatchId = null;\n'+
+    'var marcadorGPS = null;\n'+
+    'var circuloPrecision = null;\n'+
     
-    'var iconoLote=L.icon({iconUrl:\'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png\',shadowUrl:\'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png\',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]});markersLotes=[];var bounds=[];if(LOTE.length>0){LOTE.forEach(function(l){var lat=leerLat2(l),lng=leerLng2(l);if(isNaN(lat)||isNaN(lng)){console.warn(\'⚠️ Lote sin coordenadas válidas:\',l);return}var mk=L.marker([lat,lng],{icon:iconoLote}).addTo(map2);mk.bindTooltip((l.codigolote||\'Lote\')+\' · \'+(l.localidad||\'San Quintín\'),{direction:\'top\'});mk.bindPopup(\'<b>\'+(l.codigolote||\'Lote\')+\'</b><br>🟢 Disponible<br>$\'+Number(l.valor||0).toLocaleString(\'es-MX\')+\'<br>📍 \'+(l.localidad||\'San Quintín\')+\'<br><a href="https://www.google.com/maps?q=\'+lat+\',\'+lng+\'" target="_blank">📍 Ir al lote</a>\');markersLotes.push({m:mk,l:l});bounds.push([lat,lng])});\n'+
+    // FUNCIONES AUXILIARES PARA COORDENADAS
+    'function normalizarCoord2(v, tipo) {\n'+
+    '    var n = parseFloat(v);\n'+
+    '    if (isNaN(n)) return NaN;\n'+
+    '    if (Math.abs(n) <= 180) return n;\n'+
+    '    var signo = n < 0 ? -1 : 1;\n'+
+    '    n = Math.abs(n);\n'+
+    '    while (n > 180) { n = n / 10; }\n'+
+    '    return signo * n;\n'+
+    '}\n'+
     
-    // CENTRAR EN EL ÚLTIMO LOTE
-    'if(LOTE.length>0){var ultimoLote=LOTE[LOTE.length-1];var ultimoLat=leerLat2(ultimoLote);var ultimoLng=leerLng2(ultimoLote);if(!isNaN(ultimoLat)&&!isNaN(ultimoLng)){map2.setView([ultimoLat,ultimoLng],17);var markerUltimo=L.marker([ultimoLat,ultimoLng],{icon:L.icon({iconUrl:\'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png\',shadowUrl:\'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png\',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]})}).addTo(map2);markerUltimo.bindPopup(\'<b>🏁 ÚLTIMO LOTE</b><br>\'+(ultimoLote.codigolote||\'Lote\')+\'<br>🟢 Disponible<br>$\'+Number(ultimoLote.valor||0).toLocaleString(\'es-MX\')+\'<br>📍 \'+(ultimoLote.localidad||\'San Quintín\')).openPopup()}else{map2.fitBounds(bounds,{padding:[40,40],maxZoom:15})}}else{map2.setView([30.56,-115.95],11)}console.log(\'🗺️ \'+markersLotes.length+\' lotes con coordenadas válidas\');agregarControlGPS(map2)}\n'+
+    'function leerLat2(l) {\n'+
+    '    var v = l.lat !== undefined ? l.lat : (l.Lat !== undefined ? l.Lat : (l.latitud !== undefined ? l.latitud : l.Latitud));\n'+
+    '    return normalizarCoord2(v, "lat");\n'+
+    '}\n'+
     
-    'function toggleMapaLotes(){var w=document.getElementById(\'mapa-lotes-wrap\'),b=document.getElementById(\'btn-toggle-mapa\');if(w.style.display===\'none\'){w.style.display=\'block\';w.classList.add(\'fullscreen\');b.style.display=\'none\';if(!mapaInicializado){initMap2();mapaInicializado=true}setTimeout(function(){map2.invalidateSize()},150)}else{w.style.display=\'none\';w.classList.remove(\'fullscreen\');b.style.display=\'block\';cerrarPanelLotes()}}\n'+
+    'function leerLng2(l) {\n'+
+    '    var v = l.lng !== undefined ? l.lng : (l.Lng !== undefined ? l.Lng : (l.longitud !== undefined ? l.longitud : (l.lon !== undefined ? l.lon : l.Longitud)));\n'+
+    '    return normalizarCoord2(v, "lng");\n'+
+    '}\n'+
     
-    // BOTÓN GPS MEJORADO
-    'function agregarControlGPS(mapaObjeto){var GPSControl=L.Control.extend({options:{position:\'topleft\'},onAdd:function(){var container=L.DomUtil.create(\'div\',\'leaflet-bar leaflet-control\');var btn=L.DomUtil.create(\'a\',\'\',container);btn.innerHTML=\'📍\';btn.title=\'Mi ubicación en tiempo real\';btn.href=\'#\';btn.style.fontSize=\'20px\';btn.style.fontWeight=\'bold\';btn.style.backgroundColor=\'#fff\';btn.style.width=\'40px\';btn.style.height=\'40px\';btn.style.display=\'flex\';btn.style.alignItems=\'center\';btn.style.justifyContent=\'center\';btn.style.textDecoration=\'none\';btn.style.borderRadius=\'4px\';btn.style.boxShadow=\'0 2px 6px rgba(0,0,0,0.3)\';var watchId=null;var marcadorGPS=null;var circuloPrecision=null;L.DomEvent.on(btn,\'click\',function(e){e.preventDefault();e.stopPropagation();if(watchId){navigator.geolocation.clearWatch(watchId);watchId=null;btn.style.backgroundColor=\'#fff\';btn.style.color=\'#333\';if(marcadorGPS){mapaObjeto.removeLayer(marcadorGPS);marcadorGPS=null}if(circuloPrecision){mapaObjeto.removeLayer(circuloPrecision);circuloPrecision=null}return}if(!navigator.geolocation){alert(\'❌ GPS no soportado en este dispositivo\');return}btn.style.backgroundColor=\'#1a73e8\';btn.style.color=\'#fff\';watchId=navigator.geolocation.watchPosition(function(p){var ll=[p.coords.latitude,p.coords.longitude];if(!marcadorGPS){marcadorGPS=L.circleMarker(ll,{radius:8,color:\'#1a73e8\',weight:3,fillColor:\'#fff\',fillOpacity:1}).addTo(mapaObjeto);circuloPrecision=L.circle(ll,{radius:p.coords.accuracy,color:\'#1a73e8\',weight:1,fillColor:\'#1a73e8\',fillOpacity:0.1}).addTo(mapaObjeto);mapaObjeto.setView(ll,17);marcadorGPS.bindTooltip(\'📍 Tú estás aquí<br>Precisión: \'+Math.round(p.coords.accuracy)+\'m\',{permanent:true,direction:\'top\'})}else{marcadorGPS.setLatLng(ll);circuloPrecision.setLatLng(ll);circuloPrecision.setRadius(p.coords.accuracy)}},function(error){alert(\'❌ Error al obtener ubicación: \'+error.message);btn.style.backgroundColor=\'#fff\';btn.style.color=\'#333\'},{enableHighAccuracy:true,timeout:10000,maximumAge:0})});return container}});mapaObjeto.addControl(new GPSControl())}\n'+
+    // FUNCIÓN PARA ABRIR EL MAPA (ESTA ES LA CLAVE)
+    'function abrirMapaLotes() {\n'+
+    '    console.log("🗺️ Abriendo mapa...");\n'+
+    '    var wrap = document.getElementById("mapa-lotes-wrap");\n'+
+    '    wrap.style.display = "block";\n'+
+    '    document.body.style.overflow = "hidden"; // Evitar scroll\n'+
+    '    \n'+
+    '    if (!mapaInicializado) {\n'+
+    '        console.log("🔄 Inicializando mapa por primera vez...");\n'+
+    '        setTimeout(function() {\n'+
+    '            initMap2();\n'+
+    '            mapaInicializado = true;\n'+
+    '        }, 100);\n'+
+    '    } else {\n'+
+    '        console.log("🔄 Mapa ya inicializado, refrescando...");\n'+
+    '        setTimeout(function() {\n'+
+    '            map2.invalidateSize();\n'+
+    '        }, 100);\n'+
+    '    }\n'+
+    '}\n'+
     
-    'function mostrarLista(){var panel=document.getElementById(\'panel-lotes\');if(panel.classList.contains(\'show\')){panel.classList.remove(\'show\');return}var cont=document.getElementById(\'panel-lotes-lista\');if(markersLotes.length===0){cont.innerHTML=\'<p style="text-align:center;color:#999;padding:20px;">No hay lotes disponibles.</p>\'}else{cont.innerHTML=markersLotes.map(function(item,idx){var l=item.l;return \'<div class="panel-lote-item" onclick="irALote(\'+idx+\')"><div class="info"><h4>\'+(l.codigolote||\'Sin código\')+\'</h4><p>📏 \'+(l.medidas||\'Consultar\')+\' · 📍 \'+(l.localidad||\'San Quintín\')+\'</p></div><div class="precio">$\'+Number(l.valor||0).toLocaleString(\'es-MX\')+\'</div><button class="btn-ir" onclick="event.stopPropagation();irALote(\'+idx+\')">📍 Ir</button></div>\'}).join(\'\')}panel.classList.add(\'show\')}\n'+
+    // FUNCIÓN PARA CERRAR EL MAPA
+    'function cerrarMapaLotes() {\n'+
+    '    console.log("❌ Cerrando mapa...");\n'+
+    '    document.getElementById("mapa-lotes-wrap").style.display = "none";\n'+
+    '    document.body.style.overflow = ""; // Restaurar scroll\n'+
+    '    cerrarPanelLotes();\n'+
+    '    detenerGPS();\n'+
+    '}\n'+
     
-    'function cerrarPanelLotes(){document.getElementById(\'panel-lotes\').classList.remove(\'show\')}\n'+
+    // INICIALIZAR MAPA
+    'function initMap2() {\n'+
+    '    console.log("🗺️ Inicializando mapa Leaflet...");\n'+
+    '    \n'+
+    '    // Verificar que el contenedor existe\n'+
+    '    var contenedor = document.getElementById("mapa-lotes");\n'+
+    '    if (!contenedor) {\n'+
+    '        console.error("❌ No se encontró el contenedor del mapa");\n'+
+    '        return;\n'+
+    '    }\n'+
+    '    \n'+
+    '    // Crear mapa\n'+
+    '    map2 = L.map("mapa-lotes", {\n'+
+    '        zoomControl: true,\n'+
+    '        attributionControl: true\n'+
+    '    }).setView([30.56, -115.95], 11);\n'+
+    '    \n'+
+    '    // CAPA SATELITAL\n'+
+    '    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {\n'+
+    '        maxZoom: 19,\n'+
+    '        attribution: "© Esri | Satelital"\n'+
+    '    }).addTo(map2);\n'+
+    '    \n'+
+    '    // CAPA DE ETIQUETAS\n'+
+    '    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {\n'+
+    '        maxZoom: 19,\n'+
+    '        attribution: "© Esri | Calles"\n'+
+    '    }).addTo(map2);\n'+
+    '    \n'+
+    '    // ICONOS\n'+
+    '    var iconoVerde = L.icon({\n'+
+    '        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",\n'+
+    '        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",\n'+
+    '        iconSize: [25, 41],\n'+
+    '        iconAnchor: [12, 41],\n'+
+    '        popupAnchor: [1, -34],\n'+
+    '        shadowSize: [41, 41]\n'+
+    '    });\n'+
+    '    \n'+
+    '    var iconoRojo = L.icon({\n'+
+    '        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",\n'+
+    '        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",\n'+
+    '        iconSize: [25, 41],\n'+
+    '        iconAnchor: [12, 41],\n'+
+    '        popupAnchor: [1, -34],\n'+
+    '        shadowSize: [41, 41]\n'+
+    '    });\n'+
+    '    \n'+
+    '    markersLotes = [];\n'+
+    '    var bounds = [];\n'+
+    '    var lotesValidos = 0;\n'+
+    '    \n'+
+    '    console.log("📍 Procesando " + LOTES.length + " lotes...");\n'+
+    '    \n'+
+    '    if (LOTES.length > 0) {\n'+
+    '        LOTES.forEach(function(lote, index) {\n'+
+    '            var lat = leerLat2(lote);\n'+
+    '            var lng = leerLng2(lote);\n'+
+    '            \n'+
+    '            console.log("📍 Lote " + (index+1) + ": " + (lote.codigolote || "Sin código") + " - Lat: " + lat + " Lng: " + lng);\n'+
+    '            \n'+
+    '            if (isNaN(lat) || isNaN(lng)) {\n'+
+    '                console.warn("⚠️ Lote " + (index+1) + " sin coordenadas válidas");\n'+
+    '                return;\n'+
+    '            }\n'+
+    '            \n'+
+    '            lotesValidos++;\n'+
+    '            var esUltimo = (index === LOTES.length - 1);\n'+
+    '            var icono = esUltimo ? iconoRojo : iconoVerde;\n'+
+    '            \n'+
+    '            var marker = L.marker([lat, lng], {icon: icono}).addTo(map2);\n'+
+    '            \n'+
+    '            var tooltipText = (esUltimo ? "🏁 " : "") + (lote.codigolote || "Lote") + " · " + (lote.localidad || "San Quintín");\n'+
+    '            marker.bindTooltip(tooltipText, {\n'+
+    '                direction: "top",\n'+
+    '                permanent: esUltimo\n'+
+    '            });\n'+
+    '            \n'+
+    '            var popupHTML = "<div style=\'min-width:200px;font-family:sans-serif\'>" +\n'+
+    '                "<h3 style=\'margin:0 0 8px;color:#16a34a\'>" + (esUltimo ? "🏁 ÚLTIMO LOTE" : "🟢 Disponible") + "</h3>" +\n'+
+    '                "<p style=\'margin:4px 0\'><strong>" + (lote.codigolote || "Lote") + "</strong></p>" +\n'+
+    '                "<p style=\'margin:4px 0\'>📏 " + (lote.medidas || "Consultar") + "</p>" +\n'+
+    '                "<p style=\'margin:4px 0\'>💰 $" + Number(lote.valor || 0).toLocaleString("es-MX") + " MXN</p>" +\n'+
+    '                "<p style=\'margin:4px 0\'>📍 " + (lote.localidad || "San Quintín") + "</p>" +\n'+
+    '                "<a href=\'https://www.google.com/maps?q=" + lat + "," + lng + "\' target=\'_blank\' " +\n'+
+    '                "style=\'display:inline-block;margin-top:8px;padding:8px 16px;background:#1a73e8;color:#fff;" +\n'+
+    '                "text-decoration:none;border-radius:20px;font-weight:bold\'>📍 Ver en Google Maps</a>" +\n'+
+    '                "</div>";\n'+
+    '            \n'+
+    '            marker.bindPopup(popupHTML, {maxWidth: 300});\n'+
+    '            \n'+
+    '            markersLotes.push({\n'+
+    '                marker: marker,\n'+
+    '                lote: lote,\n'+
+    '                esUltimo: esUltimo\n'+
+    '            });\n'+
+    '            \n'+
+    '            bounds.push([lat, lng]);\n'+
+    '        });\n'+
+    '        \n'+
+    '        console.log("✅ " + lotesValidos + " marcadores creados de " + LOTES.length + " lotes");\n'+
+    '        \n'+
+    '        // CENTRAR EN EL ÚLTIMO LOTE\n'+
+    '        if (LOTES.length > 0) {\n'+
+    '            var ultimoLote = LOTES[LOTES.length - 1];\n'+
+    '            var ultimoLat = leerLat2(ultimoLote);\n'+
+    '            var ultimoLng = leerLng2(ultimoLote);\n'+
+    '            \n'+
+    '            if (!isNaN(ultimoLat) && !isNaN(ultimoLng)) {\n'+
+    '                map2.setView([ultimoLat, ultimoLng], 17);\n'+
+    '                console.log("🎯 Centrado en último lote: " + (ultimoLote.codigolote || "Sin código"));\n'+
+    '                \n'+
+    '                // Abrir popup del último lote\n'+
+    '                if (markersLotes.length > 0) {\n'+
+    '                    var ultimoMarker = markersLotes[markersLotes.length - 1];\n'+
+    '                    setTimeout(function() {\n'+
+    '                        ultimoMarker.marker.openPopup();\n'+
+    '                    }, 800);\n'+
+    '                }\n'+
+    '            } else if (bounds.length > 0) {\n'+
+    '                map2.fitBounds(bounds, {padding: [50, 50], maxZoom: 15});\n'+
+    '            }\n'+
+    '        }\n'+
+    '    } else {\n'+
+    '        console.warn("⚠️ No hay lotes para mostrar");\n'+
+    '        map2.setView([30.56, -115.95], 11);\n'+
+    '    }\n'+
+    '}\n'+
     
-    'function irALote(idx){var item=markersLotes[idx];if(!item)return;map2.setView(item.m.getLatLng(),17);item.m.openPopup();cerrarPanelLotes()}\n'+
+    // FUNCIÓN GPS
+    'function toggleGPS() {\n'+
+    '    var btn = document.getElementById("btn-gps-flotante");\n'+
+    '    \n'+
+    '    if (gpsWatchId) {\n'+
+    '        detenerGPS();\n'+
+    '        btn.classList.remove("activo");\n'+
+    '        return;\n'+
+    '    }\n'+
+    '    \n'+
+    '    if (!navigator.geolocation) {\n'+
+    '        alert("❌ Tu dispositivo no soporta GPS");\n'+
+    '        return;\n'+
+    '    }\n'+
+    '    \n'+
+    '    btn.classList.add("activo");\n'+
+    '    \n'+
+    '    gpsWatchId = navigator.geolocation.watchPosition(\n'+
+    '        function(pos) {\n'+
+    '            var lat = pos.coords.latitude;\n'+
+    '            var lng = pos.coords.longitude;\n'+
+    '            var precision = pos.coords.accuracy;\n'+
+    '            \n'+
+    '            if (!marcadorGPS) {\n'+
+    '                marcadorGPS = L.circleMarker([lat, lng], {\n'+
+    '                    radius: 8,\n'+
+    '                    color: "#1a73e8",\n'+
+    '                    weight: 3,\n'+
+    '                    fillColor: "#fff",\n'+
+    '                    fillOpacity: 1\n'+
+    '                }).addTo(map2);\n'+
+    '                \n'+
+    '                circuloPrecision = L.circle([lat, lng], {\n'+
+    '                    radius: precision,\n'+
+    '                    color: "#1a73e8",\n'+
+    '                    weight: 2,\n'+
+    '                    fillColor: "#1a73e8",\n'+
+    '                    fillOpacity: 0.15\n'+
+    '                }).addTo(map2);\n'+
+    '                \n'+
+    '                map2.setView([lat, lng], 17);\n'+
+    '                \n'+
+    '                marcadorGPS.bindTooltip("📍 Estás aquí<br>🎯 " + Math.round(precision) + "m", {\n'+
+    '                    permanent: true,\n'+
+    '                    direction: "top"\n'+
+    '                });\n'+
+    '            } else {\n'+
+    '                marcadorGPS.setLatLng([lat, lng]);\n'+
+    '                circuloPrecision.setLatLng([lat, lng]);\n'+
+    '                circuloPrecision.setRadius(precision);\n'+
+    '            }\n'+
+    '        },\n'+
+    '        function(error) {\n'+
+    '            alert("❌ Error de GPS: " + error.message);\n'+
+    '            detenerGPS();\n'+
+    '            btn.classList.remove("activo");\n'+
+    '        },\n'+
+    '        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }\n'+
+    '    );\n'+
+    '}\n'+
     
-    // FUNCIÓN PARA CENTRAR EN ÚLTIMO LOTE
-    'function centrarUltimoLote(){if(markersLotes.length>0){var ultimo=markersLotes[markersLotes.length-1];map2.setView(ultimo.m.getLatLng(),17);ultimo.m.openPopup()}else{alert(\'No hay lotes disponibles\')}}\n'+
+    'function detenerGPS() {\n'+
+    '    if (gpsWatchId) {\n'+
+    '        navigator.geolocation.clearWatch(gpsWatchId);\n'+
+    '        gpsWatchId = null;\n'+
+    '    }\n'+
+    '    if (marcadorGPS) {\n'+
+    '        map2.removeLayer(marcadorGPS);\n'+
+    '        marcadorGPS = null;\n'+
+    '    }\n'+
+    '    if (circuloPrecision) {\n'+
+    '        map2.removeLayer(circuloPrecision);\n'+
+    '        circuloPrecision = null;\n'+
+    '    }\n'+
+    '    var btn = document.getElementById("btn-gps-flotante");\n'+
+    '    if (btn) btn.classList.remove("activo");\n'+
+    '}\n'+
     
-    'function mostrarQR(){alert(\'📷 QR: \'+window.location.href)}<\/script>\n<script>new QRCode(document.getElementById(\'qrcode\'),{text:window.location.href,width:150,height:150});function abrirLightbox(src,desc){document.getElementById(\'lightbox-img\').src=src;document.getElementById(\'lightbox-desc\').textContent=desc||\'\';document.getElementById(\'lightbox\').classList.add(\'show\')}'+generarAvisoScript(d)+'<\/script>\n</body>\n</html>';
+    // FUNCIONES DE LISTA Y NAVEGACIÓN
+    'function mostrarLista() {\n'+
+    '    var panel = document.getElementById("panel-lotes");\n'+
+    '    if (panel.classList.contains("show")) {\n'+
+    '        panel.classList.remove("show");\n'+
+    '        return;\n'+
+    '    }\n'+
+    '    var cont = document.getElementById("panel-lotes-lista");\n'+
+    '    if (markersLotes.length === 0) {\n'+
+    '        cont.innerHTML = "<p style=\'text-align:center;color:#999;padding:20px\'>No hay lotes disponibles.</p>";\n'+
+    '    } else {\n'+
+    '        cont.innerHTML = markersLotes.map(function(item, idx) {\n'+
+    '            var l = item.lote;\n'+
+    '            return "<div class=\'panel-lote-item\' onclick=\'irALote(" + idx + ")\'>" +\n'+
+    '                "<div class=\'info\'>" +\n'+
+    '                "<h4>" + (item.esUltimo ? "🏁 " : "") + (l.codigolote || "Sin código") + "</h4>" +\n'+
+    '                "<p>📏 " + (l.medidas || "Consultar") + " · 📍 " + (l.localidad || "San Quintín") + "</p>" +\n'+
+    '                "</div>" +\n'+
+    '                "<div class=\'precio\'>$" + Number(l.valor || 0).toLocaleString("es-MX") + "</div>" +\n'+
+    '                "<button class=\'btn-ir\' onclick=\'event.stopPropagation();irALote(" + idx + ")\'>📍 Ir</button>" +\n'+
+    '                "</div>";\n'+
+    '        }).join("");\n'+
+    '    }\n'+
+    '    panel.classList.add("show");\n'+
+    '}\n'+
     
-    ultimoHTML=h;
-    var na=prompt('📝 Nombre del archivo:',d.nombre.toLowerCase().replace(/[^a-z0-9]/g,'-'));
-    ultimoNombre=(na||d.nombre.toLowerCase().replace(/[^a-z0-9]/g,'-'))+'.html';
+    'function cerrarPanelLotes() {\n'+
+    '    document.getElementById("panel-lotes").classList.remove("show");\n'+
+    '}\n'+
+    
+    'function irALote(idx) {\n'+
+    '    var item = markersLotes[idx];\n'+
+    '    if (!item) return;\n'+
+    '    map2.setView(item.marker.getLatLng(), 18);\n'+
+    '    item.marker.openPopup();\n'+
+    '    cerrarPanelLotes();\n'+
+    '}\n'+
+    
+    'function centrarUltimoLote() {\n'+
+    '    if (markersLotes.length > 0) {\n'+
+    '        var ultimo = markersLotes[markersLotes.length - 1];\n'+
+    '        map2.setView(ultimo.marker.getLatLng(), 18);\n'+
+    '        ultimo.marker.openPopup();\n'+
+    '    } else {\n'+
+    '        alert("⚠️ No hay lotes disponibles");\n'+
+    '    }\n'+
+    '}\n'+
+    
+    'function mostrarQR() {\n'+
+    '    alert("📷 Escanea el código QR en la página principal");\n'+
+    '}\n'+
+    
+    '<\/script>\n'+
+    
+    // QR CODE Y LIGHTBOX
+    '<script>\n'+
+    'new QRCode(document.getElementById("qrcode"), {\n'+
+    '    text: window.location.href,\n'+
+    '    width: 150,\n'+
+    '    height: 150\n'+
+    '});\n'+
+    'function abrirLightbox(src, desc) {\n'+
+    '    document.getElementById("lightbox-img").src = src;\n'+
+    '    document.getElementById("lightbox-desc").textContent = desc || "";\n'+
+    '    document.getElementById("lightbox").classList.add("show");\n'+
+    '}\n'+
+    generarAvisoScript(d) +
+    '<\/script>\n</body>\n</html>';
+    
+    ultimoHTML = h;
+    var na = prompt('📝 Nombre del archivo:', d.nombre.toLowerCase().replace(/[^a-z0-9]/g,'-'));
+    ultimoNombre = (na || d.nombre.toLowerCase().replace(/[^a-z0-9]/g,'-')) + '.html';
     mostrarPreview(h);
-    descargarArchivo(ultimoNombre,h);
-    mostrarToast('✅ '+ultimoNombre);
+    descargarArchivo(ultimoNombre, h);
+    mostrarToast('✅ ' + ultimoNombre + ' - ' + disponibles.length + ' lotes');
 }
+
+        
         // ============ UTILIDADES ============
         function mostrarPreview(h){document.getElementById('preview-box').style.display='block';document.getElementById('preview-code').textContent=h}
         function descargarActual(){if(ultimoHTML&&ultimoNombre){descargarArchivo(ultimoNombre,ultimoHTML);mostrarToast('💾 Descargado')}}
