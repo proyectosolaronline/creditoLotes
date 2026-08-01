@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Catálogo - Usuarios</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;padding:20px}
+        .container{max-width:600px;margin:0 auto}
+        h1{font-family:'Outfit',sans-serif;text-align:center;margin-bottom:20px;color:#1a73e8}
+        .section{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+        .section h2{font-family:'Outfit',sans-serif;font-size:16px;margin-bottom:12px;color:#333}
+        input,textarea{width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;margin-bottom:10px}
+        input:focus,textarea:focus{border-color:#1a73e8;outline:none}
+        .btn{padding:12px 20px;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;width:100%;margin-bottom:8px}
+        .btn-save{background:#16a34a;color:#fff}
+        .btn-delete{background:#dc2626;color:#fff}
+        .btn-load{background:#1a73e8;color:#fff}
+        .msg{padding:10px;border-radius:8px;text-align:center;font-weight:600;margin-top:10px;display:none}
+        .msg-ok{background:#d1fae5;color:#065f46}
+        .msg-err{background:#fee2e2;color:#991b1b}
+        .preview{width:100px;height:100px;object-fit:cover;border-radius:8px;margin:5px;border:2px solid #e0e0e0}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Admin Catálogo - Usuarios</h1>
+        
+        <!-- CARGAR DATOS -->
+        <div class="section">
+            <h2>📥 Cargar datos existentes</h2>
+            <input type="text" id="idUsuario" placeholder="ID Usuario (ej: 1)" value="1">
+            <button class="btn btn-load" onclick="cargarDatos()">📥 Cargar desde Sheet</button>
+            <div id="msg-load" class="msg"></div>
+        </div>
+
+        <!-- FOTO 1 -->
+        <div class="section">
+            <h2>🖼️ Foto 1</h2>
+            <input type="file" id="foto1-input" accept="image/*" onchange="preview(this,'preview1','foto1')">
+            <img id="preview1" class="preview" style="display:none">
+            <input type="text" id="desc1" placeholder="Descripción Foto 1">
+            <button class="btn btn-delete" onclick="borrarFoto(1)">🗑️ Borrar Foto 1</button>
+        </div>
+
+        <!-- FOTO 2 -->
+        <div class="section">
+            <h2>🖼️ Foto 2</h2>
+            <input type="file" id="foto2-input" accept="image/*" onchange="preview(this,'preview2','foto2')">
+            <img id="preview2" class="preview" style="display:none">
+            <input type="text" id="desc2" placeholder="Descripción Foto 2">
+            <button class="btn btn-delete" onclick="borrarFoto(2)">🗑️ Borrar Foto 2</button>
+        </div>
+
+        <!-- FOTO 3 -->
+        <div class="section">
+            <h2>🖼️ Foto 3</h2>
+            <input type="file" id="foto3-input" accept="image/*" onchange="preview(this,'preview3','foto3')">
+            <img id="preview3" class="preview" style="display:none">
+            <input type="text" id="desc3" placeholder="Descripción Foto 3">
+            <button class="btn btn-delete" onclick="borrarFoto(3)">🗑️ Borrar Foto 3</button>
+        </div>
+
+        <!-- FOTO 4 -->
+        <div class="section">
+            <h2>🖼️ Foto 4</h2>
+            <input type="file" id="foto4-input" accept="image/*" onchange="preview(this,'preview4','foto4')">
+            <img id="preview4" class="preview" style="display:none">
+            <input type="text" id="desc4" placeholder="Descripción Foto 4">
+            <button class="btn btn-delete" onclick="borrarFoto(4)">🗑️ Borrar Foto 4</button>
+        </div>
+
+        <!-- GUARDAR -->
+        <div class="section">
+            <button class="btn btn-save" onclick="guardarTodo()">💾 Guardar Todo</button>
+            <button class="btn btn-delete" onclick="borrarTodo()">🗑️ Borrar Todo el Catálogo</button>
+            <div id="msg-save" class="msg"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbw83md07bzx1UmGRn51i-pRiuvQaEig_mUWS4VjvO0yTIlDCULqT8p3NGsSe2S4nZhzjA/exec';
+        let foto1='',foto2='',foto3='',foto4='';
+
+        function preview(input, previewId, tipo){
+            if(input.files&&input.files[0]){
+                var r=new FileReader();
+                r.onload=function(e){
+                    document.getElementById(previewId).src=e.target.result;
+                    document.getElementById(previewId).style.display='inline-block';
+                    if(tipo==='foto1')foto1=e.target.result;
+                    if(tipo==='foto2')foto2=e.target.result;
+                    if(tipo==='foto3')foto3=e.target.result;
+                    if(tipo==='foto4')foto4=e.target.result;
+                };
+                r.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function cargarDatos(){
+            var id=document.getElementById('idUsuario').value.trim();
+            if(!id){showMsg('msg-load','⚠️ Ingresa ID Usuario','msg-err');return}
+            try{
+                var r=await fetch(API_URL+'?tipo=negocios');
+                var d=await r.json();
+                if(d.success&&d.data&&d.data.negocios){
+                    var n=d.data.negocios.find(function(x){return x.idusuario==id});
+                    if(n){
+                        if(n.foto1){foto1=n.foto1;document.getElementById('preview1').src=n.foto1;document.getElementById('preview1').style.display='inline-block'}
+                        if(n.desc1)document.getElementById('desc1').value=n.desc1;
+                        if(n.foto2){foto2=n.foto2;document.getElementById('preview2').src=n.foto2;document.getElementById('preview2').style.display='inline-block'}
+                        if(n.desc2)document.getElementById('desc2').value=n.desc2;
+                        if(n.foto3){foto3=n.foto3;document.getElementById('preview3').src=n.foto3;document.getElementById('preview3').style.display='inline-block'}
+                        if(n.desc3)document.getElementById('desc3').value=n.desc3;
+                        if(n.foto4){foto4=n.foto4;document.getElementById('preview4').src=n.foto4;document.getElementById('preview4').style.display='inline-block'}
+                        if(n.desc4)document.getElementById('desc4').value=n.desc4;
+                        showMsg('msg-load','✅ Datos cargados','msg-ok');
+                    }else{showMsg('msg-load','⚠️ Usuario no encontrado','msg-err')}
+                }
+            }catch(e){showMsg('msg-load','❌ Error de conexión','msg-err')}
+        }
+
+        async function guardarTodo(){
+            var id=document.getElementById('idUsuario').value.trim();
+            if(!id){showMsg('msg-save','⚠️ Ingresa ID Usuario','msg-err');return}
+            try{
+                var r=await fetch(API_URL,{method:'POST',body:JSON.stringify({
+                    _accion:'guardar_catalogo',
+                    idUsuario:id,
+                    foto1:foto1,desc1:document.getElementById('desc1').value.trim(),
+                    foto2:foto2,desc2:document.getElementById('desc2').value.trim(),
+                    foto3:foto3,desc3:document.getElementById('desc3').value.trim(),
+                    foto4:foto4,desc4:document.getElementById('desc4').value.trim()
+                })});
+                var d=await r.json();
+                if(d.success){showMsg('msg-save','✅ Catálogo guardado','msg-ok')}else{showMsg('msg-save','❌ Error: '+d.message,'msg-err')}
+            }catch(e){showMsg('msg-save','❌ Error de conexión','msg-err')}
+        }
+
+        function borrarFoto(n){
+            if(n===1){foto1='';document.getElementById('preview1').style.display='none';document.getElementById('desc1').value=''}
+            if(n===2){foto2='';document.getElementById('preview2').style.display='none';document.getElementById('desc2').value=''}
+            if(n===3){foto3='';document.getElementById('preview3').style.display='none';document.getElementById('desc3').value=''}
+            if(n===4){foto4='';document.getElementById('preview4').style.display='none';document.getElementById('desc4').value=''}
+            showMsg('msg-save','🗑️ Foto '+n+' borrada localmente. Guarda para aplicar cambios.','msg-err');
+        }
+
+        function borrarTodo(){
+            if(confirm('⚠️ ¿Borrar TODAS las fotos y descripciones? Esto no se puede deshacer.')){
+                foto1='';foto2='';foto3='';foto4='';
+                document.getElementById('preview1').style.display='none';
+                document.getElementById('preview2').style.display='none';
+                document.getElementById('preview3').style.display='none';
+                document.getElementById('preview4').style.display='none';
+                document.getElementById('desc1').value='';
+                document.getElementById('desc2').value='';
+                document.getElementById('desc3').value='';
+                document.getElementById('desc4').value='';
+                guardarTodo();
+            }
+        }
+
+        function showMsg(id,texto,clase){
+            var m=document.getElementById(id);
+            m.textContent=texto;
+            m.className='msg '+clase;
+            m.style.display='block';
+            setTimeout(function(){m.style.display='none'},4000);
+        }
+    </script>
+</body>
+</html>
