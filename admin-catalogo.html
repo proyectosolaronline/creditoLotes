@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ver Datos - Usuario</title>
+    <title>Editar Catálogo - Usuario</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -12,77 +12,109 @@
         h1{font-family:'Outfit',sans-serif;text-align:center;margin-bottom:20px;color:#1a73e8}
         .card{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
         .card h2{font-family:'Outfit',sans-serif;font-size:15px;color:#1a73e8;margin-bottom:8px}
-        .card p{font-size:14px;color:#555;margin:4px 0;word-break:break-all}
-        .card .label{font-weight:600;color:#333;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
-        .btn{position:fixed;bottom:20px;left:20px;z-index:9999;background:#fff;color:#333;width:44px;height:44px;border-radius:50%;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,.3)}
+        .card p{font-size:13px;color:#555;margin:3px 0}
+        .label{font-weight:600;color:#333;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+        .preview{width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #e0e0e0;margin:5px}
+        .fila{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:#fafafa;border-radius:10px}
+        .fila input[type="text"]{flex:1;padding:8px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px}
+        .btn{padding:12px;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;width:100%;margin-top:10px}
+        .btn-save{background:#16a34a;color:#fff}
+        .btn-back{position:fixed;bottom:20px;left:20px;background:#fff;color:#333;width:44px;height:44px;border-radius:50%;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,.3)}
         .msg{padding:10px;border-radius:8px;text-align:center;font-weight:600;margin:10px 0;display:none}
         .msg-ok{background:#d1fae5;color:#065f46}
         .msg-err{background:#fee2e2;color:#991b1b}
-        .galeria{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-        .galeria img{width:100%;border-radius:10px}
-        .galeria p{font-size:11px;text-align:center;color:#777}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>👤 Datos del Usuario</h1>
+        <h1>🖼️ Editar Catálogo</h1>
         <div id="msg" class="msg"></div>
-        <div id="contenido"></div>
+        <div id="datos"></div>
+        <div id="catalogo"></div>
+        <button class="btn btn-save" onclick="guardar()">💾 Guardar Cambios</button>
     </div>
-
-    <button class="btn" onclick="history.back()">←</button>
+    <button class="btn-back" onclick="history.back()">←</button>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbw83md07bzx1UmGRn51i-pRiuvQaEig_mUWS4VjvO0yTIlDCULqT8p3NGsSe2S4nZhzjA/exec';
-        const ID_USUARIO = '1';
+        const API = 'https://script.google.com/macros/s/AKfycbw83md07bzx1UmGRn51i-pRiuvQaEig_mUWS4VjvO0yTIlDCULqT8p3NGsSe2S4nZhzjA/exec';
+        const ID = '1';
+        let foto1='',foto2='',foto3='',foto4='';
 
-        async function cargarDatos(){
+        async function cargar(){
             try{
-                var r = await fetch(API_URL+'?tipo=negocios');
+                var r = await fetch(API+'?tipo=negocios');
                 var d = await r.json();
-                if(d.success && d.data && d.data.negocios){
-                    var u = d.data.negocios.find(function(x){return x.idusuario == ID_USUARIO});
+                if(d.success&&d.data&&d.data.negocios){
+                    var u = d.data.negocios.find(function(x){return x.idusuario==ID});
                     if(u){
-                        var h = '';
-                        // Datos generales
-                        h += '<div class="card"><h2>🏢 Datos Generales</h2>';
-                        h += '<p><span class="label">Nombre:</span> '+(u.nombre||'N/D')+'</p>';
+                        // VISUALIZAR DATOS GENERALES (sin edición)
+                        var h = '<div class="card"><h2>🏢 Datos del Negocio</h2>';
+                        h += '<p><span class="label">Negocio:</span> '+(u.nombrenegocio||'N/D')+'</p>';
+                        h += '<p><span class="label">Contacto:</span> '+(u.nombre||'N/D')+'</p>';
                         h += '<p><span class="label">Correo:</span> '+(u.correo||'N/D')+'</p>';
                         h += '<p><span class="label">Teléfono:</span> '+(u.telefono||'N/D')+'</p>';
                         h += '<p><span class="label">Ubicación:</span> '+(u.ubicacion||'N/D')+'</p>';
-                        h += '<p><span class="label">Negocio:</span> '+(u.nombrenegocio||'N/D')+'</p>';
-                        h += '<p><span class="label">Estado:</span> '+(u.estado||'N/D')+'</p>';
                         h += '<p><span class="label">Descripción:</span> '+(u.descripcion||'N/D')+'</p>';
                         h += '</div>';
+                        document.getElementById('datos').innerHTML = h;
 
-                        // Catálogo
-                        if(u.foto1||u.foto2||u.foto3||u.foto4){
-                            h += '<div class="card"><h2>🖼️ Catálogo</h2><div class="galeria">';
-                            if(u.foto1)h+='<div><img src="'+u.foto1+'"><p>'+(u.desc1||'Foto 1')+'</p></div>';
-                            if(u.foto2)h+='<div><img src="'+u.foto2+'"><p>'+(u.desc2||'Foto 2')+'</p></div>';
-                            if(u.foto3)h+='<div><img src="'+u.foto3+'"><p>'+(u.desc3||'Foto 3')+'</p></div>';
-                            if(u.foto4)h+='<div><img src="'+u.foto4+'"><p>'+(u.desc4||'Foto 4')+'</p></div>';
-                            h += '</div></div>';
+                        // EDITAR SOLO FOTOS Y DESCRIPCIONES
+                        foto1=u.foto1||''; foto2=u.foto2||''; foto3=u.foto3||''; foto4=u.foto4||'';
+                        var c = '<div class="card"><h2>🖼️ Editar Catálogo</h2>';
+                        for(var i=1;i<=4;i++){
+                            var f = u['foto'+i]||'';
+                            var desc = u['desc'+i]||'';
+                            c += '<div class="fila">';
+                            c += '<img src="'+(f||'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect fill=%22%23ddd%22 width=%2280%22 height=%2280%22/><text fill=%22%23999%22 x=%2225%22 y=%2245%22>📷</text></svg>')+'" class="preview" id="preview'+i+'">';
+                            c += '<input type="file" accept="image/*" onchange="leerFoto('+i+',this)" style="width:60px">';
+                            c += '<input type="text" id="desc'+i+'" value="'+desc+'" placeholder="Descripción foto '+i+'">';
+                            c += '</div>';
                         }
-
-                        document.getElementById('contenido').innerHTML = h;
+                        c += '</div>';
+                        document.getElementById('catalogo').innerHTML = c;
                     } else {
                         showMsg('⚠️ Usuario no encontrado','msg-err');
                     }
                 }
-            } catch(e){
-                showMsg('❌ Error de conexión','msg-err');
+            } catch(e){ showMsg('❌ Error de conexión','msg-err') }
+        }
+
+        function leerFoto(n,input){
+            if(input.files&&input.files[0]){
+                var r=new FileReader();
+                r.onload=function(e){
+                    document.getElementById('preview'+n).src=e.target.result;
+                    if(n===1)foto1=e.target.result;
+                    if(n===2)foto2=e.target.result;
+                    if(n===3)foto3=e.target.result;
+                    if(n===4)foto4=e.target.result;
+                };
+                r.readAsDataURL(input.files[0]);
             }
         }
 
-        function showMsg(t,c){
-            var m = document.getElementById('msg');
-            m.textContent = t;
-            m.className = 'msg '+c;
-            m.style.display = 'block';
+        async function guardar(){
+            try{
+                var r = await fetch(API,{method:'POST',body:JSON.stringify({
+                    _accion:'guardar_catalogo',
+                    idUsuario:ID,
+                    foto1:foto1, desc1:document.getElementById('desc1').value.trim(),
+                    foto2:foto2, desc2:document.getElementById('desc2').value.trim(),
+                    foto3:foto3, desc3:document.getElementById('desc3').value.trim(),
+                    foto4:foto4, desc4:document.getElementById('desc4').value.trim()
+                })});
+                var d = await r.json();
+                if(d.success){showMsg('✅ Catálogo guardado','msg-ok')}else{showMsg('❌ Error','msg-err')}
+            } catch(e){showMsg('❌ Error de conexión','msg-err')}
         }
 
-        cargarDatos();
+        function showMsg(t,c){
+            var m=document.getElementById('msg');
+            m.textContent=t; m.className='msg '+c; m.style.display='block';
+            setTimeout(function(){m.style.display='none'},3000);
+        }
+
+        cargar();
     </script>
 </body>
 </html>
