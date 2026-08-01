@@ -1,4 +1,4 @@
-wdaefsrtuyfhkuhfbjvfcx
+vidvoizndfk;vnzdjk;nvcjkjkdznfj;
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,6 +13,7 @@ wdaefsrtuyfhkuhfbjvfcx
         .fila img{width:60px;height:60px;border-radius:8px;background:#eee}
         .fila input[type="text"]{flex:1;padding:8px;border:1px solid #ddd;border-radius:6px}
         .btn{padding:12px;background:#16a34a;color:#fff;border:none;border-radius:8px;width:100%;font-weight:bold;cursor:pointer;margin-top:10px}
+        .btn-back{position:fixed;bottom:20px;left:20px;background:#fff;color:#333;width:44px;height:44px;border-radius:50%;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,.3)}
         .msg{padding:10px;text-align:center;font-weight:bold;display:none}
         .ok{background:#d4edda;color:#155724}
         .err{background:#f8d7da;color:#721c24}
@@ -22,15 +23,16 @@ wdaefsrtuyfhkuhfbjvfcx
     <h2>🖼️ Editar Catálogo</h2>
     <div id="msg" class="msg"></div>
     <div class="card">
-        <p><strong>🏢 Cargando...</strong></p>
-        <p id="info"></p>
+        <p><strong>🏢 Datos del Usuario</strong></p>
+        <p id="info">Cargando...</p>
     </div>
     <div id="fotos"></div>
     <button class="btn" onclick="guardar()">💾 Guardar</button>
+    <button class="btn-back" onclick="history.back()">←</button>
 
     <script>
         const API = 'https://script.google.com/macros/s/AKfycbw83md07bzx1UmGRn51i-pRiuvQaEig_mUWS4VjvO0yTIlDCULqT8p3NGsSe2S4nZhzjA/exec';
-       const ID = 'USR-001';
+        const ID = 'USR-001';
         var ft = ['','','',''];
 
         async function init(){
@@ -40,27 +42,33 @@ wdaefsrtuyfhkuhfbjvfcx
                 if(d.success && d.data && d.data.negocios){
                     var u = d.data.negocios.find(function(x){return x.idusuario == ID});
                     if(u){
+                        // Mostrar datos reales de TU estructura
                         document.getElementById('info').innerHTML = 
-                            'Nombre: <b>'+(u.nombrenegocio||'N/D')+'</b><br>'+
-                            'Contacto: '+(u.nombre||'N/D')+'<br>'+
-                            'Correo: '+(u.correo||'N/D')+'<br>'+
-                            'Tel: '+(u.telefono||'N/D');
+                            '<b>ID:</b> '+(u.idusuario||'N/D')+'<br>'+
+                            '<b>Nombre:</b> '+(u.nombre||'N/D')+'<br>'+
+                            '<b>Rol:</b> '+(u.rol||'N/D')+'<br>'+
+                            '<b>Activo:</b> '+(u.activo||'N/D')+'<br>'+
+                            '<b>Último acceso:</b> '+(u.ultimoacceso||'N/D');
                         
-                        var h = '<div class="card"><h3>📷 Fotos</h3>';
+                        var h = '<div class="card"><h3>📷 Fotos del Catálogo</h3>';
                         for(var i=1;i<=4;i++){
                             ft[i-1] = u['foto'+i] || '';
                             var desc = u['desc'+i] || '';
                             h += '<div class="fila">';
                             h += '<img id="img'+i+'" src="'+(ft[i-1]||'')+'">';
                             h += '<input type="file" accept="image/*" onchange="cargar('+i+',this)">';
-                            h += '<input type="text" id="d'+i+'" value="'+desc+'" placeholder="Descripción">';
+                            h += '<input type="text" id="d'+i+'" value="'+desc+'" placeholder="Descripción foto '+i+'">';
                             h += '</div>';
                         }
                         h += '</div>';
                         document.getElementById('fotos').innerHTML = h;
+                    } else {
+                        document.getElementById('info').innerHTML = '⚠️ Usuario no encontrado';
                     }
                 }
-            }catch(e){}
+            }catch(e){
+                document.getElementById('info').innerHTML = '❌ Error de conexión';
+            }
         }
 
         function cargar(n,f){
@@ -87,10 +95,15 @@ wdaefsrtuyfhkuhfbjvfcx
                 if(d.success){
                     m.className='msg ok';m.textContent='✅ Guardado';
                 }else{
-                    m.className='msg err';m.textContent='❌ Error';
+                    m.className='msg err';m.textContent='❌ Error: '+(d.message||'');
                 }
                 m.style.display='block';
-            }catch(e){}
+                setTimeout(function(){m.style.display='none'},3000);
+            }catch(e){
+                var m = document.getElementById('msg');
+                m.className='msg err';m.textContent='❌ Error de conexión';
+                m.style.display='block';
+            }
         }
 
         init();
