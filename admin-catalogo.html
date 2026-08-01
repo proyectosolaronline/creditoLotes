@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Datos - Usuario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;padding:20px}
+        .container{max-width:500px;margin:0 auto}
+        h1{font-family:'Outfit',sans-serif;text-align:center;margin-bottom:20px;color:#1a73e8}
+        .card{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+        .card h2{font-family:'Outfit',sans-serif;font-size:15px;color:#1a73e8;margin-bottom:8px}
+        .card p{font-size:14px;color:#555;margin:4px 0;word-break:break-all}
+        .card .label{font-weight:600;color:#333;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+        .btn{position:fixed;bottom:20px;left:20px;z-index:9999;background:#fff;color:#333;width:44px;height:44px;border-radius:50%;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,.3)}
+        .msg{padding:10px;border-radius:8px;text-align:center;font-weight:600;margin:10px 0;display:none}
+        .msg-ok{background:#d1fae5;color:#065f46}
+        .msg-err{background:#fee2e2;color:#991b1b}
+        .galeria{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+        .galeria img{width:100%;border-radius:10px}
+        .galeria p{font-size:11px;text-align:center;color:#777}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👤 Datos del Usuario</h1>
+        <div id="msg" class="msg"></div>
+        <div id="contenido"></div>
+    </div>
+
+    <button class="btn" onclick="history.back()">←</button>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbw83md07bzx1UmGRn51i-pRiuvQaEig_mUWS4VjvO0yTIlDCULqT8p3NGsSe2S4nZhzjA/exec';
+        const ID_USUARIO = '1';
+
+        async function cargarDatos(){
+            try{
+                var r = await fetch(API_URL+'?tipo=negocios');
+                var d = await r.json();
+                if(d.success && d.data && d.data.negocios){
+                    var u = d.data.negocios.find(function(x){return x.idusuario == ID_USUARIO});
+                    if(u){
+                        var h = '';
+                        // Datos generales
+                        h += '<div class="card"><h2>🏢 Datos Generales</h2>';
+                        h += '<p><span class="label">Nombre:</span> '+(u.nombre||'N/D')+'</p>';
+                        h += '<p><span class="label">Correo:</span> '+(u.correo||'N/D')+'</p>';
+                        h += '<p><span class="label">Teléfono:</span> '+(u.telefono||'N/D')+'</p>';
+                        h += '<p><span class="label">Ubicación:</span> '+(u.ubicacion||'N/D')+'</p>';
+                        h += '<p><span class="label">Negocio:</span> '+(u.nombrenegocio||'N/D')+'</p>';
+                        h += '<p><span class="label">Estado:</span> '+(u.estado||'N/D')+'</p>';
+                        h += '<p><span class="label">Descripción:</span> '+(u.descripcion||'N/D')+'</p>';
+                        h += '</div>';
+
+                        // Catálogo
+                        if(u.foto1||u.foto2||u.foto3||u.foto4){
+                            h += '<div class="card"><h2>🖼️ Catálogo</h2><div class="galeria">';
+                            if(u.foto1)h+='<div><img src="'+u.foto1+'"><p>'+(u.desc1||'Foto 1')+'</p></div>';
+                            if(u.foto2)h+='<div><img src="'+u.foto2+'"><p>'+(u.desc2||'Foto 2')+'</p></div>';
+                            if(u.foto3)h+='<div><img src="'+u.foto3+'"><p>'+(u.desc3||'Foto 3')+'</p></div>';
+                            if(u.foto4)h+='<div><img src="'+u.foto4+'"><p>'+(u.desc4||'Foto 4')+'</p></div>';
+                            h += '</div></div>';
+                        }
+
+                        document.getElementById('contenido').innerHTML = h;
+                    } else {
+                        showMsg('⚠️ Usuario no encontrado','msg-err');
+                    }
+                }
+            } catch(e){
+                showMsg('❌ Error de conexión','msg-err');
+            }
+        }
+
+        function showMsg(t,c){
+            var m = document.getElementById('msg');
+            m.textContent = t;
+            m.className = 'msg '+c;
+            m.style.display = 'block';
+        }
+
+        cargarDatos();
+    </script>
+</body>
+</html>
