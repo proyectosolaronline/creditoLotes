@@ -3,94 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Catálogo - Usuario</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Editar Catálogo</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;padding:20px}
-        .container{max-width:500px;margin:0 auto}
-        h1{font-family:'Outfit',sans-serif;text-align:center;margin-bottom:20px;color:#1a73e8}
-        .card{background:#fff;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
-        .card h2{font-family:'Outfit',sans-serif;font-size:15px;color:#1a73e8;margin-bottom:8px}
-        .card p{font-size:13px;color:#555;margin:3px 0}
-        .label{font-weight:600;color:#333;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
-        .preview{width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #e0e0e0;margin:5px}
-        .fila{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:#fafafa;border-radius:10px}
-        .fila input[type="text"]{flex:1;padding:8px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px}
-        .btn{padding:12px;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;width:100%;margin-top:10px}
-        .btn-save{background:#16a34a;color:#fff}
-        .btn-back{position:fixed;bottom:20px;left:20px;background:#fff;color:#333;width:44px;height:44px;border-radius:50%;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,.3)}
-        .msg{padding:10px;border-radius:8px;text-align:center;font-weight:600;margin:10px 0;display:none}
-        .msg-ok{background:#d1fae5;color:#065f46}
-        .msg-err{background:#fee2e2;color:#991b1b}
+        body{font-family:Arial,sans-serif;background:#f0f2f5;padding:20px}
+        .card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px}
+        h2{font-size:16px;color:#1a73e8}
+        .fila{display:flex;align-items:center;gap:10px;margin:8px 0}
+        .fila img{width:60px;height:60px;border-radius:8px;background:#eee}
+        .fila input[type="text"]{flex:1;padding:8px;border:1px solid #ddd;border-radius:6px}
+        .btn{padding:12px;background:#16a34a;color:#fff;border:none;border-radius:8px;width:100%;font-weight:bold;cursor:pointer;margin-top:10px}
+        .msg{padding:10px;text-align:center;font-weight:bold;display:none}
+        .ok{background:#d4edda;color:#155724}
+        .err{background:#f8d7da;color:#721c24}
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🖼️ Editar Catálogo</h1>
-        <div id="msg" class="msg"></div>
-        <div id="datos"></div>
-        <div id="catalogo"></div>
-        <button class="btn btn-save" onclick="guardar()">💾 Guardar Cambios</button>
+    <h2>🖼️ Editar Catálogo</h2>
+    <div id="msg" class="msg"></div>
+    <div class="card">
+        <p><strong>🏢 Cargando...</strong></p>
+        <p id="info"></p>
     </div>
-    <button class="btn-back" onclick="history.back()">←</button>
+    <div id="fotos"></div>
+    <button class="btn" onclick="guardar()">💾 Guardar</button>
 
     <script>
         const API = 'https://script.google.com/macros/s/AKfycbw83md07bzx1UmGRn51i-pRiuvQaEig_mUWS4VjvO0yTIlDCULqT8p3NGsSe2S4nZhzjA/exec';
         const ID = '1';
-        let foto1='',foto2='',foto3='',foto4='';
+        var ft = ['','','',''];
 
-        async function cargar(){
+        async function init(){
             try{
                 var r = await fetch(API+'?tipo=negocios');
                 var d = await r.json();
-                if(d.success&&d.data&&d.data.negocios){
-                    var u = d.data.negocios.find(function(x){return x.idusuario==ID});
+                if(d.success && d.data && d.data.negocios){
+                    var u = d.data.negocios.find(function(x){return x.idusuario == ID});
                     if(u){
-                        // VISUALIZAR DATOS GENERALES (sin edición)
-                        var h = '<div class="card"><h2>🏢 Datos del Negocio</h2>';
-                        h += '<p><span class="label">Negocio:</span> '+(u.nombrenegocio||'N/D')+'</p>';
-                        h += '<p><span class="label">Contacto:</span> '+(u.nombre||'N/D')+'</p>';
-                        h += '<p><span class="label">Correo:</span> '+(u.correo||'N/D')+'</p>';
-                        h += '<p><span class="label">Teléfono:</span> '+(u.telefono||'N/D')+'</p>';
-                        h += '<p><span class="label">Ubicación:</span> '+(u.ubicacion||'N/D')+'</p>';
-                        h += '<p><span class="label">Descripción:</span> '+(u.descripcion||'N/D')+'</p>';
-                        h += '</div>';
-                        document.getElementById('datos').innerHTML = h;
-
-                        // EDITAR SOLO FOTOS Y DESCRIPCIONES
-                        foto1=u.foto1||''; foto2=u.foto2||''; foto3=u.foto3||''; foto4=u.foto4||'';
-                        var c = '<div class="card"><h2>🖼️ Editar Catálogo</h2>';
+                        document.getElementById('info').innerHTML = 
+                            'Nombre: <b>'+(u.nombrenegocio||'N/D')+'</b><br>'+
+                            'Contacto: '+(u.nombre||'N/D')+'<br>'+
+                            'Correo: '+(u.correo||'N/D')+'<br>'+
+                            'Tel: '+(u.telefono||'N/D');
+                        
+                        var h = '<div class="card"><h3>📷 Fotos</h3>';
                         for(var i=1;i<=4;i++){
-                            var f = u['foto'+i]||'';
-                            var desc = u['desc'+i]||'';
-                            c += '<div class="fila">';
-                            c += '<img src="'+(f||'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect fill=%22%23ddd%22 width=%2280%22 height=%2280%22/><text fill=%22%23999%22 x=%2225%22 y=%2245%22>📷</text></svg>')+'" class="preview" id="preview'+i+'">';
-                            c += '<input type="file" accept="image/*" onchange="leerFoto('+i+',this)" style="width:60px">';
-                            c += '<input type="text" id="desc'+i+'" value="'+desc+'" placeholder="Descripción foto '+i+'">';
-                            c += '</div>';
+                            ft[i-1] = u['foto'+i] || '';
+                            var desc = u['desc'+i] || '';
+                            h += '<div class="fila">';
+                            h += '<img id="img'+i+'" src="'+(ft[i-1]||'')+'">';
+                            h += '<input type="file" accept="image/*" onchange="cargar('+i+',this)">';
+                            h += '<input type="text" id="d'+i+'" value="'+desc+'" placeholder="Descripción">';
+                            h += '</div>';
                         }
-                        c += '</div>';
-                        document.getElementById('catalogo').innerHTML = c;
-                    } else {
-                        showMsg('⚠️ Usuario no encontrado','msg-err');
+                        h += '</div>';
+                        document.getElementById('fotos').innerHTML = h;
                     }
                 }
-            } catch(e){ showMsg('❌ Error de conexión','msg-err') }
+            }catch(e){}
         }
 
-        function leerFoto(n,input){
-            if(input.files&&input.files[0]){
-                var r=new FileReader();
-                r.onload=function(e){
-                    document.getElementById('preview'+n).src=e.target.result;
-                    if(n===1)foto1=e.target.result;
-                    if(n===2)foto2=e.target.result;
-                    if(n===3)foto3=e.target.result;
-                    if(n===4)foto4=e.target.result;
-                };
-                r.readAsDataURL(input.files[0]);
-            }
+        function cargar(n,f){
+            var r = new FileReader();
+            r.onload = function(e){
+                document.getElementById('img'+n).src = e.target.result;
+                ft[n-1] = e.target.result;
+            };
+            r.readAsDataURL(f.files[0]);
         }
 
         async function guardar(){
@@ -98,23 +76,23 @@
                 var r = await fetch(API,{method:'POST',body:JSON.stringify({
                     _accion:'guardar_catalogo',
                     idUsuario:ID,
-                    foto1:foto1, desc1:document.getElementById('desc1').value.trim(),
-                    foto2:foto2, desc2:document.getElementById('desc2').value.trim(),
-                    foto3:foto3, desc3:document.getElementById('desc3').value.trim(),
-                    foto4:foto4, desc4:document.getElementById('desc4').value.trim()
+                    foto1:ft[0],desc1:document.getElementById('d1').value,
+                    foto2:ft[1],desc2:document.getElementById('d2').value,
+                    foto3:ft[2],desc3:document.getElementById('d3').value,
+                    foto4:ft[3],desc4:document.getElementById('d4').value
                 })});
                 var d = await r.json();
-                if(d.success){showMsg('✅ Catálogo guardado','msg-ok')}else{showMsg('❌ Error','msg-err')}
-            } catch(e){showMsg('❌ Error de conexión','msg-err')}
+                var m = document.getElementById('msg');
+                if(d.success){
+                    m.className='msg ok';m.textContent='✅ Guardado';
+                }else{
+                    m.className='msg err';m.textContent='❌ Error';
+                }
+                m.style.display='block';
+            }catch(e){}
         }
 
-        function showMsg(t,c){
-            var m=document.getElementById('msg');
-            m.textContent=t; m.className='msg '+c; m.style.display='block';
-            setTimeout(function(){m.style.display='none'},3000);
-        }
-
-        cargar();
+        init();
     </script>
 </body>
 </html>
