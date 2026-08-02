@@ -205,7 +205,373 @@ function generarLanding(){
         if(r)catalogoHTML=generarCatalogo(d);
     }
     
-    var h='<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>'+d.nombre+' - '+(d.eslogan||'Terrenos')+'</title>\n<meta name="description" content="'+d.descripcion.substring(0,160)+'">\n<meta name="robots" content="index, follow">'+generarMetaTagsFacebook(d)+'\n<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>\n'+generarSchemaGoogle(d)+'\n<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:\'Inter\',sans-serif;color:#222;background:#fff}'+estilosCSS(c)+'\n/* ESTILOS ADICIONALES PARA EL MAPA */\n#mapa-lotes-wrap{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9998;background:#000}\n#mapa-lotes{width:100%;height:100%}\n.mapa-botones{position:fixed;bottom:20px;left:0;right:0;z-index:10000;display:flex;gap:10px;padding:0 20px;flex-wrap:wrap;justify-content:center}\n.mapa-botones button{flex:1;min-width:100px;max-width:200px;padding:14px 10px;border-radius:25px;border:none;font-weight:700;cursor:pointer;font-size:13px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}\n.btn-ml{background:#16a34a}.btn-mc{background:#ff6900}.btn-mq{background:#333}\n.btn-cerrar-mapa-full{position:fixed;top:20px;right:20px;z-index:10001;background:#dc2626;color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}\n.btn-gps-flotante{position:fixed;bottom:120px;right:20px;z-index:10001;background:#1a73e8;color:#fff;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transition:all .3s}\n.btn-gps-flotante.activo{background:#dc2626;animation:pulse 2s infinite}\n@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,.4)}70%{box-shadow:0 0 0 20px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}\n</style>\n</head>\n<body>\n'+generarHeroHTML(d)+'\n'+(d.descripcion?'<div class="descripcion-texto">'+d.descripcion+'</div>':'')+'\n'+catalogoHTML+'\n'+(d.direccion?'<div class="domicilio-texto">📍 '+d.direccion+'</div>':'')+'\n\n<!-- BOTÓN PARA ABRIR EL MAPA -->\n<button class="btn-vermapa" id="btn-toggle-mapa" onclick="abrirMapaLotes()">\n    🗺️ Ver mapa de lotes ('+disponibles.length+' disponibles)\n</button>\n\n<!-- CONTENEDOR DEL MAPA (OCULTO INICIALMENTE) -->\n<div id="mapa-lotes-wrap">\n    <button class="btn-cerrar-mapa-full" onclick="cerrarMapaLotes()">✕</button>\n    <div id="mapa-lotes"></div>\n    <button class="btn-gps-flotante" id="btn-gps-flotante" onclick="toggleGPS()" title="Activar mi ubicación">📍</button>\n    <div class="mapa-botones">\n        <button class="btn-ml" onclick="mostrarLista()">📋 Ver lista ('+disponibles.length+')</button>\n        <button class="btn-mc" onclick="centrarUltimoLote()">🏁 Último lote</button>\n        <button class="btn-mq" onclick="mostrarQR()">▣ QR</button>\n    </div>\n</div>\n\n<!-- PANEL DE LISTA DE LOTES -->\n<div id="panel-lotes" class="panel-lotes">\n    <div class="panel-lotes-header">\n        <strong>📋 Lotes disponibles ('+disponibles.length+')</strong>\n        <button onclick="cerrarPanelLotes()">✕</button>\n    </div>\n    <div id="panel-lotes-lista" class="panel-lotes-lista"></div>\n</div>\n\n<div class="barra-botones">\n<a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" class="btn-comollegar" onclick="avisarWhatsApp()">📍 Cómo llegar</a>\n<a href="https://wa.me/'+(d.whatsapp?d.whatsapp.replace(/\\+/g,''):'')+'" target="_blank" class="btn-contacto">📞 WhatsApp</a>\n'+btnMsg+'\n</div>\n<div class="qr-visible"><p>📷 Escanea el QR:</p><div id="qrcode" style="display:inline-block;"></div></div>\n<div class="lightbox" id="lightbox" onclick="this.classList.remove(\'show\')"><span class="cerrar">×</span><img id="lightbox-img" src="" alt=""><p class="lightbox-desc" id="lightbox-desc"></p></div>\n<footer>© '+new Date().getFullYear()+' '+d.nombre+'</footer>\n\n<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>\n<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>\n<script>\n'+
+  var h='<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>'+d.nombre+' - '+(d.eslogan||'Terrenos')+'</title>\n<meta name="description" content="'+d.descripcion.substring(0,160)+'">\n<meta name="robots" content="index, follow">'+generarMetaTagsFacebook(d)+'\n<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">\n<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>\n'+generarSchemaGoogle(d)+'\n<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:\'Inter\',sans-serif;color:#222;background:#fff}'+estilosCSS(c)+'\n/* ESTILOS ADICIONALES PARA EL MAPA */\n#mapa-lotes-wrap{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9998;background:#000}\n#mapa-lotes{width:100%;height:100%}\n.mapa-botones{position:fixed;bottom:20px;left:0;right:0;z-index:10000;display:flex;gap:10px;padding:0 20px;flex-wrap:wrap;justify-content:center}\n.mapa-botones button{flex:1;min-width:100px;max-width:200px;padding:14px 10px;border-radius:25px;border:none;font-weight:700;cursor:pointer;font-size:13px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}\n.btn-ml{background:#16a34a}.btn-mc{background:#ff6900}.btn-mq{background:#333}\n.btn-cerrar-mapa-full{position:fixed;top:20px;right:20px;z-index:10001;background:#dc2626;color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}\n.btn-gps-flotante{position:fixed;bottom:120px;right:20px;z-index:10001;background:#1a73e8;color:#fff;border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transition:all .3s}\n.btn-gps-flotante.activo{background:#dc2626;animation:pulse 2s infinite}\n@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,.4)}70%{box-shadow:0 0 0 20px rgba(220,38,38,0)}100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}}\n</style>\n</head>\n<body>\n'+generarHeroHTML(d)+'\n'+(d.descripcion?'<div class="descripcion-texto">'+d.descripcion+'</div>':'')+'\n'+catalogoHTML+'\n'+(d.direccion?'<div class="domicilio-texto">📍 '+d.direccion+'</div>':'')+'\n\n<!-- BOTÓN PARA ABRIR EL MAPA -->\n<button class="btn-vermapa" id="btn-toggle-mapa" onclick="abrirMapaLotes()">\n    🗺️ Ver mapa de lotes ('+disponibles.length+' disponibles)\n</button>\n\n<!-- CONTENEDOR DEL MAPA (OCULTO INICIALMENTE) -->\n<div id="mapa-lotes-wrap">\n    <button class="btn-cerrar-mapa-full" onclick="cerrarMapaLotes()">✕</button>\n    <div id="mapa-lotes"></div>\n    <button class="btn-gps-flotante" id="btn-gps-flotante" onclick="toggleGPS()" title="Activar mi ubicación">📍</button>\n    <div class="mapa-botones">\n        <button class="btn-ml" onclick="mostrarLista()">📋 Ver lista ('+disponibles.length+')</button>\n        <button class="btn-mc" onclick="centrarUltimoLote()">🏁 Último lote</button>\n        <button class="btn-mq" onclick="mostrarQR()">▣ QR</button>\n    </div>\n</div>\n\n<!-- PANEL DE LISTA DE LOTES -->\n<div id="panel-lotes" class="panel-lotes">\n    <div class="panel-lotes-header">\n        <strong>📋 Lotes disponibles ('+disponibles.length+')</strong>\n        <button onclick="cerrarPanelLotes()">✕</button>\n    </div>\n    <div id="panel-lotes-lista" class="panel-lotes-lista"></div>\n</div>\n\n<div class="barra-botones">\n<a href="https://www.google.com/maps?q='+d.lat+','+d.lng+'" target="_blank" class="btn-comollegar" onclick="avisarWhatsApp()">📍 Cómo llegar</a>\n<a href="https://wa.me/'+(d.whatsapp?d.whatsapp.replace(/\\+/g,''):'')+'" target="_blank" class="btn-contacto">📞 WhatsApp</a>\n'+btnMsg+'\n</div>\n<div class="qr-visible"><p>📷 Escanea el QR:</p><div id="qrcode" style="display:inline-block;"></div></div>\n<div class="lightbox" id="lightbox" onclick="this.classList.remove(\'show\')"><span class="cerrar">×</span><img id="lightbox-img" src="" alt=""><p class="lightbox-desc" id="lightbox-desc"></p></div>\n<footer>© '+new Date().getFullYear()+' '+d.nombre+'</footer>\n\n<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>\n<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>\n<script>\n'+
+    
+    // PASAR DATOS DE LOTES
+    'var LOTES = '+JSON.stringify(disponibles)+';\n'+
+    'console.log("📦 Lotes cargados:", LOTES.length);\n'+
+    'if(LOTES.length > 0) console.log("🔍 Primer lote:", LOTES[0]);\n'+
+    
+    // VARIABLES GLOBALES
+    'var map2 = null;\n'+
+    'var mapaInicializado = false;\n'+
+    'var markersLotes = [];\n'+
+    'var gpsWatchId = null;\n'+
+    'var marcadorGPS = null;\n'+
+    'var circuloPrecision = null;\n'+
+    
+    // FUNCIONES AUXILIARES PARA COORDENADAS
+    'function normalizarCoord2(v, tipo) {\n'+
+    '    var n = parseFloat(v);\n'+
+    '    if (isNaN(n)) return NaN;\n'+
+    '    if (Math.abs(n) <= 180) return n;\n'+
+    '    var signo = n < 0 ? -1 : 1;\n'+
+    '    n = Math.abs(n);\n'+
+    '    while (n > 180) { n = n / 10; }\n'+
+    '    return signo * n;\n'+
+    '}\n'+
+    
+    'function leerLat2(l) {\n'+
+    '    var v = l.lat !== undefined ? l.lat : (l.Lat !== undefined ? l.Lat : (l.latitud !== undefined ? l.latitud : l.Latitud));\n'+
+    '    return normalizarCoord2(v, "lat");\n'+
+    '}\n'+
+    
+    'function leerLng2(l) {\n'+
+    '    var v = l.lng !== undefined ? l.lng : (l.Lng !== undefined ? l.Lng : (l.longitud !== undefined ? l.longitud : (l.lon !== undefined ? l.lon : l.Longitud)));\n'+
+    '    return normalizarCoord2(v, "lng");\n'+
+    '}\n'+
+    
+    // FUNCIÓN PARA ABRIR EL MAPA
+    'function abrirMapaLotes() {\n'+
+    '    console.log("🗺️ Abriendo mapa...");\n'+
+    '    var wrap = document.getElementById("mapa-lotes-wrap");\n'+
+    '    wrap.style.display = "block";\n'+
+    '    document.body.style.overflow = "hidden"; // Evitar scroll\n'+
+    '    \n'+
+    '    if (!mapaInicializado) {\n'+
+    '        console.log("🔄 Inicializando mapa por primera vez...");\n'+
+    '        setTimeout(function() {\n'+
+    '            initMap2();\n'+
+    '            mapaInicializado = true;\n'+
+    '        }, 100);\n'+
+    '    } else {\n'+
+    '        console.log("🔄 Mapa ya inicializado, refrescando...");\n'+
+    '        setTimeout(function() {\n'+
+    '            map2.invalidateSize();\n'+
+    '        }, 100);\n'+
+    '    }\n'+
+    '}\n'+
+    
+    // FUNCIÓN PARA CERRAR EL MAPA
+    'function cerrarMapaLotes() {\n'+
+    '    console.log("❌ Cerrando mapa...");\n'+
+    '    document.getElementById("mapa-lotes-wrap").style.display = "none";\n'+
+    '    document.body.style.overflow = ""; // Restaurar scroll\n'+
+    '    cerrarPanelLotes();\n'+
+    '    detenerGPS();\n'+
+    '}\n'+
+    
+    // ============================================================
+    // 🔥 NUEVA FUNCIÓN initMap2 CON ZOOM DINÁMICO (MÁXIMO 20KM)
+    // ============================================================
+    'function initMap2() {\n'+
+    '    console.log("🗺️ Inicializando mapa Leaflet...");\n'+
+    '    \n'+
+    '    var contenedor = document.getElementById("mapa-lotes");\n'+
+    '    if (!contenedor) {\n'+
+    '        console.error("❌ No se encontró el contenedor del mapa");\n'+
+    '        return;\n'+
+    '    }\n'+
+    '    \n'+
+    '    map2 = L.map("mapa-lotes", {\n'+
+    '        zoomControl: true,\n'+
+    '        attributionControl: true\n'+
+    '    }).setView([30.56, -115.95], 11);\n'+
+    '    \n'+
+    '    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {\n'+
+    '        maxZoom: 19,\n'+
+    '        attribution: "© Esri | Satelital"\n'+
+    '    }).addTo(map2);\n'+
+    '    \n'+
+    '    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {\n'+
+    '        maxZoom: 19,\n'+
+    '        attribution: "© Esri | Calles"\n'+
+    '    }).addTo(map2);\n'+
+    '    \n'+
+    '    var iconoVerde = L.icon({\n'+
+    '        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",\n'+
+    '        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",\n'+
+    '        iconSize: [25, 41],\n'+
+    '        iconAnchor: [12, 41],\n'+
+    '        popupAnchor: [1, -34],\n'+
+    '        shadowSize: [41, 41]\n'+
+    '    });\n'+
+    '    \n'+
+    '    var iconoRojo = L.icon({\n'+
+    '        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",\n'+
+    '        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",\n'+
+    '        iconSize: [25, 41],\n'+
+    '        iconAnchor: [12, 41],\n'+
+    '        popupAnchor: [1, -34],\n'+
+    '        shadowSize: [41, 41]\n'+
+    '    });\n'+
+    '    \n'+
+    '    markersLotes = [];\n'+
+    '    var bounds = [];\n'+
+    '    var lotesValidos = 0;\n'+
+    '    \n'+
+    '    console.log("📍 Procesando " + LOTES.length + " lotes...");\n'+
+    '    \n'+
+    '    if (LOTES.length > 0) {\n'+
+    '        LOTES.forEach(function(lote, index) {\n'+
+    '            var lat = leerLat2(lote);\n'+
+    '            var lng = leerLng2(lote);\n'+
+    '            \n'+
+    '            if (isNaN(lat) || isNaN(lng)) {\n'+
+    '                console.warn("⚠️ Lote " + (index+1) + " sin coordenadas válidas");\n'+
+    '                return;\n'+
+    '            }\n'+
+    '            \n'+
+    '            lotesValidos++;\n'+
+    '            var esUltimo = (index === LOTES.length - 1);\n'+
+    '            var icono = esUltimo ? iconoRojo : iconoVerde;\n'+
+    '            \n'+
+    '            var marker = L.marker([lat, lng], {icon: icono}).addTo(map2);\n'+
+    '            \n'+
+    '            var tooltipText = (esUltimo ? "🏁 " : "") + (lote.codigolote || "Lote") + " · " + (lote.localidad || "San Quintín");\n'+
+    '            marker.bindTooltip(tooltipText, {\n'+
+    '                direction: "top",\n'+
+    '                permanent: esUltimo\n'+
+    '            });\n'+
+    '            \n'+
+    '            var popupHTML = "<div style=\'min-width:200px;font-family:sans-serif\'>" +\n'+
+    '                "<h3 style=\'margin:0 0 8px;color:#16a34a\'>" + (esUltimo ? "🏁 ÚLTIMO LOTE" : "🟢 Disponible") + "</h3>" +\n'+
+    '                "<p style=\'margin:4px 0\'><strong>" + (lote.codigolote || "Lote") + "</strong></p>" +\n'+
+    '                "<p style=\'margin:4px 0\'>📏 " + (lote.medidas || "Consultar") + "</p>" +\n'+
+    '                "<p style=\'margin:4px 0\'>💰 $" + Number(lote.valor || 0).toLocaleString("es-MX") + " MXN</p>" +\n'+
+    '                "<p style=\'margin:4px 0\'>📍 " + (lote.localidad || "San Quintín") + "</p>" +\n'+
+    '                "<a href=\'https://www.google.com/maps?q=" + lat + "," + lng + "\' target=\'_blank\' " +\n'+
+    '                "style=\'display:inline-block;margin-top:8px;padding:8px 16px;background:#1a73e8;color:#fff;" +\n'+
+    '                "text-decoration:none;border-radius:20px;font-weight:bold\'>📍 Ver en Google Maps</a>" +\n'+
+    '                "</div>";\n'+
+    '            \n'+
+    '            marker.bindPopup(popupHTML, {maxWidth: 300});\n'+
+    '            \n'+
+    '            markersLotes.push({\n'+
+    '                marker: marker,\n'+
+    '                lote: lote,\n'+
+    '                esUltimo: esUltimo\n'+
+    '            });\n'+
+    '            \n'+
+    '            bounds.push([lat, lng]);\n'+
+    '        });\n'+
+    '        \n'+
+    '        console.log("✅ " + lotesValidos + " marcadores creados de " + LOTES.length + " lotes");\n'+
+    '        \n'+
+    '        // ============================================================\n'+
+    '        // 🔥 NUEVA LÓGICA: CALCULAR CENTRO Y ZOOM PARA CUBRIR 20KM\n'+
+    '        // ============================================================\n'+
+    '        if (bounds.length > 0) {\n'+
+    '            // 1. Calcular el centro geográfico (promedio de lat y lng)\n'+
+    '            var sumLat = 0, sumLng = 0;\n'+
+    '            bounds.forEach(function(b) {\n'+
+    '                sumLat += b[0];\n'+
+    '                sumLng += b[1];\n'+
+    '            });\n'+
+    '            var centerLat = sumLat / bounds.length;\n'+
+    '            var centerLng = sumLng / bounds.length;\n'+
+    '            \n'+
+    '            // 2. Encontrar la distancia máxima desde el centro a cualquier lote\n'+
+    '            var maxDist = 0;\n'+
+    '            bounds.forEach(function(b) {\n'+
+    '                var dist = map2.distance([centerLat, centerLng], b);\n'+
+    '                if (dist > maxDist) maxDist = dist;\n'+
+    '            });\n'+
+    '            \n'+
+    '            console.log("📏 Distancia máxima desde el centro: " + Math.round(maxDist) + " metros");\n'+
+    '            \n'+
+    '            // 3. Ajustar el zoom para que el lote más lejano esté a menos de 20km\n'+
+    '            var zoomLevel = 13;\n'+
+    '            if (maxDist > 20000) {\n'+
+    '                zoomLevel = 11;\n'+
+    '                console.log("🔍 Ajustando zoom a nivel 11 (más de 20km)");\n'+
+    '            } else if (maxDist > 5000) {\n'+
+    '                zoomLevel = 12;\n'+
+    '            } else if (maxDist > 2000) {\n'+
+    '                zoomLevel = 13;\n'+
+    '            } else if (maxDist > 1000) {\n'+
+    '                zoomLevel = 14;\n'+
+    '            } else {\n'+
+    '                zoomLevel = 15;\n'+
+    '            }\n'+
+    '            \n'+
+    '            // 4. Centrar el mapa y aplicar zoom\n'+
+    '            map2.setView([centerLat, centerLng], zoomLevel);\n'+
+    '            console.log("🎯 Centro: " + centerLat.toFixed(6) + ", " + centerLng.toFixed(6) + " | Zoom: " + zoomLevel);\n'+
+    '            \n'+
+    '            // 5. Si hay un último lote, abrir su popup\n'+
+    '            if (markersLotes.length > 0) {\n'+
+    '                var ultimoMarker = markersLotes[markersLotes.length - 1];\n'+
+    '                setTimeout(function() {\n'+
+    '                    ultimoMarker.marker.openPopup();\n'+
+    '                }, 800);\n'+
+    '            }\n'+
+    '        } else {\n'+
+    '            map2.setView([30.56, -115.95], 11);\n'+
+    '        }\n'+
+    '        // ============================================================\n'+
+    '    } else {\n'+
+    '        console.warn("⚠️ No hay lotes para mostrar");\n'+
+    '        map2.setView([30.56, -115.95], 11);\n'+
+    '    }\n'+
+    '}\n'+
+    
+    // FUNCIÓN GPS
+    'function toggleGPS() {\n'+
+    '    var btn = document.getElementById("btn-gps-flotante");\n'+
+    '    \n'+
+    '    if (gpsWatchId) {\n'+
+    '        detenerGPS();\n'+
+    '        btn.classList.remove("activo");\n'+
+    '        return;\n'+
+    '    }\n'+
+    '    \n'+
+    '    if (!navigator.geolocation) {\n'+
+    '        alert("❌ Tu dispositivo no soporta GPS");\n'+
+    '        return;\n'+
+    '    }\n'+
+    '    \n'+
+    '    btn.classList.add("activo");\n'+
+    '    \n'+
+    '    gpsWatchId = navigator.geolocation.watchPosition(\n'+
+    '        function(pos) {\n'+
+    '            var lat = pos.coords.latitude;\n'+
+    '            var lng = pos.coords.longitude;\n'+
+    '            var precision = pos.coords.accuracy;\n'+
+    '            \n'+
+    '            if (!marcadorGPS) {\n'+
+    '                marcadorGPS = L.circleMarker([lat, lng], {\n'+
+    '                    radius: 8,\n'+
+    '                    color: "#1a73e8",\n'+
+    '                    weight: 3,\n'+
+    '                    fillColor: "#fff",\n'+
+    '                    fillOpacity: 1\n'+
+    '                }).addTo(map2);\n'+
+    '                \n'+
+    '                circuloPrecision = L.circle([lat, lng], {\n'+
+    '                    radius: precision,\n'+
+    '                    color: "#1a73e8",\n'+
+    '                    weight: 2,\n'+
+    '                    fillColor: "#1a73e8",\n'+
+    '                    fillOpacity: 0.15\n'+
+    '                }).addTo(map2);\n'+
+    '                \n'+
+    '                map2.setView([lat, lng], 17);\n'+
+    '                \n'+
+    '                marcadorGPS.bindTooltip("📍 Estás aquí<br>🎯 " + Math.round(precision) + "m", {\n'+
+    '                    permanent: true,\n'+
+    '                    direction: "top"\n'+
+    '                });\n'+
+    '            } else {\n'+
+    '                marcadorGPS.setLatLng([lat, lng]);\n'+
+    '                circuloPrecision.setLatLng([lat, lng]);\n'+
+    '                circuloPrecision.setRadius(precision);\n'+
+    '            }\n'+
+    '        },\n'+
+    '        function(error) {\n'+
+    '            alert("❌ Error de GPS: " + error.message);\n'+
+    '            detenerGPS();\n'+
+    '            btn.classList.remove("activo");\n'+
+    '        },\n'+
+    '        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }\n'+
+    '    );\n'+
+    '}\n'+
+    
+    'function detenerGPS() {\n'+
+    '    if (gpsWatchId) {\n'+
+    '        navigator.geolocation.clearWatch(gpsWatchId);\n'+
+    '        gpsWatchId = null;\n'+
+    '    }\n'+
+    '    if (marcadorGPS) {\n'+
+    '        map2.removeLayer(marcadorGPS);\n'+
+    '        marcadorGPS = null;\n'+
+    '    }\n'+
+    '    if (circuloPrecision) {\n'+
+    '        map2.removeLayer(circuloPrecision);\n'+
+    '        circuloPrecision = null;\n'+
+    '    }\n'+
+    '    var btn = document.getElementById("btn-gps-flotante");\n'+
+    '    if (btn) btn.classList.remove("activo");\n'+
+    '}\n'+
+    
+    // FUNCIONES DE LISTA Y NAVEGACIÓN
+    'function mostrarLista() {\n'+
+    '    var panel = document.getElementById("panel-lotes");\n'+
+    '    if (panel.classList.contains("show")) {\n'+
+    '        panel.classList.remove("show");\n'+
+    '        return;\n'+
+    '    }\n'+
+    '    var cont = document.getElementById("panel-lotes-lista");\n'+
+    '    if (markersLotes.length === 0) {\n'+
+    '        cont.innerHTML = "<p style=\'text-align:center;color:#999;padding:20px\'>No hay lotes disponibles.</p>";\n'+
+    '    } else {\n'+
+    '        cont.innerHTML = markersLotes.map(function(item, idx) {\n'+
+    '            var l = item.lote;\n'+
+    '            return "<div class=\'panel-lote-item\' onclick=\'irALote(" + idx + ")\'>" +\n'+
+    '                "<div class=\'info\'>" +\n'+
+    '                "<h4>" + (item.esUltimo ? "🏁 " : "") + (l.codigolote || "Sin código") + "</h4>" +\n'+
+    '                "<p>📏 " + (l.medidas || "Consultar") + " · 📍 " + (l.localidad || "San Quintín") + "</p>" +\n'+
+    '                "</div>" +\n'+
+    '                "<div class=\'precio\'>$" + Number(l.valor || 0).toLocaleString("es-MX") + "</div>" +\n'+
+    '                "<button class=\'btn-ir\' onclick=\'event.stopPropagation();irALote(" + idx + ")\'>📍 Ir</button>" +\n'+
+    '                "</div>";\n'+
+    '        }).join("");\n'+
+    '    }\n'+
+    '    panel.classList.add("show");\n'+
+    '}\n'+
+    
+    'function cerrarPanelLotes() {\n'+
+    '    document.getElementById("panel-lotes").classList.remove("show");\n'+
+    '}\n'+
+    
+    'function irALote(idx) {\n'+
+    '    var item = markersLotes[idx];\n'+
+    '    if (!item) return;\n'+
+    '    map2.setView(item.marker.getLatLng(), 18);\n'+
+    '    item.marker.openPopup();\n'+
+    '    cerrarPanelLotes();\n'+
+    '}\n'+
+    
+    'function centrarUltimoLote() {\n'+
+    '    if (markersLotes.length > 0) {\n'+
+    '        var ultimo = markersLotes[markersLotes.length - 1];\n'+
+    '        map2.setView(ultimo.marker.getLatLng(), 18);\n'+
+    '        ultimo.marker.openPopup();\n'+
+    '    } else {\n'+
+    '        alert("⚠️ No hay lotes disponibles");\n'+
+    '    }\n'+
+    '}\n'+
+    
+    'function mostrarQR() {\n'+
+    '    alert("📷 Escanea el código QR en la página principal");\n'+
+    '}\n'+
+    
+    '<\/script>\n'+
+    
+    // QR CODE Y LIGHTBOX
+    '<script>\n'+
+    'new QRCode(document.getElementById("qrcode"), {\n'+
+    '    text: window.location.href,\n'+
+    '    width: 150,\n'+
+    '    height: 150\n'+
+    '});\n'+
+    'function abrirLightbox(src, desc) {\n'+
+    '    document.getElementById("lightbox-img").src = src;\n'+
+    '    document.getElementById("lightbox-desc").textContent = desc || "";\n'+
+    '    document.getElementById("lightbox").classList.add("show");\n'+
+    '}\n'+
+    generarAvisoScript(d) +
+    '<\/script>\n</body>\n</html>';                                                                                                                                                                                                                                                                                                                                                                                                                
     
     // PASAR DATOS DE LOTES
     'var LOTES = '+JSON.stringify(disponibles)+';\n'+
