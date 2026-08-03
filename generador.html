@@ -118,16 +118,49 @@
         </div>
 
         <!-- PASO 9: GENERAR -->
-        <div class="section"><div class="section-title"><span>🚀</span> PASO 9: Generar</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;"><button class="btn btn-accent" onclick="generarFlyerSencillo()">🎨 Landing Sencilla</button><button class="btn btn-success" onclick="generarLanding()">📦 Landing + Mapa</button></div>
-            <div id="preview-box" class="preview-box"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><strong style="color:#fff;">👁️ Vista Previa</strong><button class="btn btn-primary" onclick="descargarActual()" style="width:auto;padding:8px 16px;font-size:12px;">💾 Descargar</button></div><pre id="preview-code"></pre></div>
-        </div>
+
+<!-- PASO 9: GENERAR -->
+<div class="section">
+    <div class="section-title"><span>🚀</span> PASO 9: Generar</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <button class="btn btn-accent" onclick="generarFlyerSencillo()">🎨 Landing Sencilla</button>
+        <button class="btn btn-success" onclick="generarLanding()">📦 Landing + Mapa</button>
     </div>
+    <div id="preview-box" class="preview-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong style="color:#fff;">👁️ Vista Previa</strong>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-primary" onclick="descargarActual()" style="width:auto;padding:8px 16px;font-size:12px;">💾 Descargar</button>
+                <button class="btn btn-success" id="btn-copiar" onclick="copiarAlPortapapeles()" style="width:auto;padding:8px 16px;font-size:12px;">📋 Copiar</button>
+            </div>
+        </div>
+        <pre id="preview-code"></pre>
+    </div>
+</div>
 
-    <script>
-        let lotesData=[],logoBase64='',fotoBase64='',foto1Base64='',foto2Base64='',foto3Base64='',foto4Base64='',ultimoHTML='',ultimoNombre='',estiloActual='amazon';
-        let map, marker;
-
+<script>
+// ============ COPIAR AL PORTAPAPELES ============
+function copiarAlPortapapeles() {
+    var codigo = document.getElementById('preview-code').textContent;
+    if (!codigo) {
+        mostrarToast('⚠️ No hay código para copiar', '#f59e0b');
+        return;
+    }
+    navigator.clipboard.writeText(codigo).then(function() {
+        mostrarToast('✅ Código copiado al portapapeles');
+    }).catch(function() {
+        // Fallback para navegadores que no soportan clipboard API
+        var textarea = document.createElement('textarea');
+        textarea.value = codigo;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        mostrarToast('✅ Código copiado al portapapeles');
+    });
+}
+</script>
+        
         // ============ MAPA CON GPS ============
         function toggleMapa(){var d=document.getElementById('map'),bc=document.getElementById('btn-cerrar-mapa');if(d.classList.contains('fullscreen')){d.classList.remove('fullscreen');d.style.display='none';bc.style.display='none'}else{d.style.display='block';d.classList.add('fullscreen');bc.style.display='block';if(!map)initMap();mostrarLotesEnMapaPrincipal();setTimeout(function(){map.invalidateSize()},200)}}
         function initMap(){map=L.map('map',{zoomControl:true}).setView([30.56,-115.95],13);L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'}).addTo(map);L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'}).addTo(map);map.on('click',function(e){colocarPin(e.latlng.lat,e.latlng.lng)})}
