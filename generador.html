@@ -672,5 +672,80 @@ function leerLng(l){var v=l.lng!==undefined?l.lng:(l.Lng!==undefined?l.Lng:(l.lo
         window.addEventListener('load',function(){restaurarDatosLocal();setTimeout(cargarFotosDesdeSheet,1000)});
         setInterval(guardarDatosLocal,5000);
     </script>
+
+
+
+<!-- ============================================= -->
+<!-- EXTRACTOR.HTML - Pegar justo antes de </body> -->
+<!-- Botón flotante que descarga el HTML actual    -->
+<!-- ============================================= -->
+<button id="btnExtractorHTML" title="Descargar este HTML" style="
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  z-index:99999;
+  background:#38bdf8;
+  color:#0f172a;
+  border:none;
+  border-radius:50%;
+  width:56px;
+  height:56px;
+  font-size:24px;
+  cursor:pointer;
+  box-shadow:0 4px 14px rgba(0,0,0,.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .15s, background .15s;
+">⬇️</button>
+
+<script>
+(function(){
+  const btn = document.getElementById('btnExtractorHTML');
+
+  btn.addEventListener('mouseenter', function(){
+    btn.style.transform = 'scale(1.08)';
+    btn.style.background = '#0ea5e9';
+  });
+  btn.addEventListener('mouseleave', function(){
+    btn.style.transform = 'scale(1)';
+    btn.style.background = '#38bdf8';
+  });
+
+  btn.addEventListener('click', function(){
+    // Clona el documento actual y quita el propio botón/script del resultado
+    const clon = document.documentElement.cloneNode(true);
+    const btnClon = clon.querySelector('#btnExtractorHTML');
+    if (btnClon) btnClon.remove();
+
+    const scripts = clon.querySelectorAll('script');
+    scripts.forEach(function(s){
+      if (s.textContent.indexOf('btnExtractorHTML') !== -1) s.remove();
+    });
+
+    const html = '<!DOCTYPE html>\n' + clon.outerHTML;
+
+    const nombre = (document.title || 'pagina')
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'pagina';
+
+    const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    btn.textContent = '✅';
+    setTimeout(function(){ btn.textContent = '⬇️'; }, 1500);
+  });
+})();
+</script>
+    
 </body>
 </html>
