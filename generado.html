@@ -674,12 +674,12 @@ function leerLng(l){var v=l.lng!==undefined?l.lng:(l.Lng!==undefined?l.Lng:(l.lo
     </script>
 
 
-
 <!-- ============================================= -->
-<!-- EXTRACTOR.HTML - Pegar justo antes de </body> -->
-<!-- Botón flotante que descarga el HTML actual    -->
+<!-- Pegar esto justo antes de </body>             -->
+<!-- Botón flotante que ABRE extractor.html         -->
+<!-- (extractor.html debe estar en la misma carpeta) -->
 <!-- ============================================= -->
-<button id="btnExtractorHTML" title="Descargar este HTML" style="
+<button id="btnAbrirExtractor" title="Abrir extractor de HTML" style="
   position:fixed;
   bottom:20px;
   right:20px;
@@ -701,7 +701,7 @@ function leerLng(l){var v=l.lng!==undefined?l.lng:(l.Lng!==undefined?l.Lng:(l.lo
 
 <script>
 (function(){
-  const btn = document.getElementById('btnExtractorHTML');
+  const btn = document.getElementById('btnAbrirExtractor');
 
   btn.addEventListener('mouseenter', function(){
     btn.style.transform = 'scale(1.08)';
@@ -713,39 +713,9 @@ function leerLng(l){var v=l.lng!==undefined?l.lng:(l.Lng!==undefined?l.Lng:(l.lo
   });
 
   btn.addEventListener('click', function(){
-    // Clona el documento actual y quita el propio botón/script del resultado
-    const clon = document.documentElement.cloneNode(true);
-    const btnClon = clon.querySelector('#btnExtractorHTML');
-    if (btnClon) btnClon.remove();
-
-    const scripts = clon.querySelectorAll('script');
-    scripts.forEach(function(s){
-      if (s.textContent.indexOf('btnExtractorHTML') !== -1) s.remove();
-    });
-
-    const html = '<!DOCTYPE html>\n' + clon.outerHTML;
-
-    const nombre = (document.title || 'pagina')
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'pagina';
-
-    const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nombre + '.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    btn.textContent = '✅';
-    setTimeout(function(){ btn.textContent = '⬇️'; }, 1500);
+    window.open('extractor.html', '_blank');
   });
 })();
-</script>
-    
+</script>    
 </body>
 </html>
