@@ -645,7 +645,21 @@ function leerLng(l){var v=l.lng!==undefined?l.lng:(l.Lng!==undefined?l.Lng:(l.lo
         // ============ UTILIDADES ============
         function mostrarPreview(h){document.getElementById('preview-box').style.display='block';document.getElementById('preview-code').textContent=h}
         function descargarActual(){if(ultimoHTML&&ultimoNombre){descargarArchivo(ultimoNombre,ultimoHTML);mostrarToast('💾 Descargado')}}
-        function descargarArchivo(n,c){var b=new Blob([c],{type:'text/html'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
+        
+        
+        function descargarArchivo(n,c){
+    var b=new Blob([c],{type:'text/plain;charset=utf-8'});
+    var u=URL.createObjectURL(b);
+    var a=document.createElement('a');
+    a.href=u;
+    a.download=n.replace('.html','.txt');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(u);
+}
+        
+        
         function mostrarToast(m,col){col=col||'#16a34a';var t=document.createElement('div');t.className='toast';t.textContent=m;t.style.background=col;document.body.appendChild(t);setTimeout(function(){t.remove()},3000)}
 
         window.addEventListener('load',function(){restaurarDatosLocal();setTimeout(cargarFotosDesdeSheet,1000)});
