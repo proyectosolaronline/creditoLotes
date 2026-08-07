@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administrar Usuarios</title>
+<style>
+    *{box-sizing:border-box}
+    body{font-family:Arial,sans-serif;background:#f0f2f5;padding:16px;margin:0;padding-bottom:80px}
+    h2{font-size:18px;color:#0f4c81;margin:0 0 12px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .btn{padding:12px 16px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:14px}
+    .btn-primary{background:#16a34a;color:#fff}
+    .btn-secondary{background:#e5e7eb;color:#333}
+    .btn-danger{background:#dc2626;color:#fff}
+    .btn-block{width:100%;margin-top:10px}
+    .card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    .user-card{display:flex;gap:12px;align-items:center;cursor:pointer}
+    .user-card img{width:50px;height:50px;border-radius:8px;object-fit:cover;background:#eee;flex-shrink:0}
+    .user-card .info{flex:1;min-width:0}
+    .user-card .nombre{font-weight:bold;color:#1a1a1a;font-size:15px}
+    .user-card .negocio{font-size:12px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .badge{display:inline-block;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:20px;margin-top:4px}
+    .badge-activo{background:#C8E6C9;color:#155724}
+    .badge-inactivo{background:#FFCDD2;color:#721c24}
+    .field{margin-bottom:12px}
+    .field label{display:block;font-size:12px;font-weight:bold;color:#555;margin-bottom:4px}
+    .field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit}
+    .field textarea{resize:vertical;min-height:60px}
+    .row2{display:flex;gap:10px}
+    .row2 .field{flex:1}
+    .seccion-titulo{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7a92b0;margin:16px 0 8px;border-top:1px solid #eee;padding-top:12px}
+    .seccion-titulo:first-child{border-top:none;margin-top:0;padding-top:0}
+    .foto-fila{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .foto-fila img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:#eee;flex-shrink:0}
+    .foto-fila .foto-inputs{flex:1;display:flex;flex-direction:column;gap:6px}
+    .msg{padding:10px;text-align:center;font-weight:bold;border-radius:8px;margin-bottom:12px;display:none}
+    .ok{background:#d4edda;color:#155724}
+    .err{background:#f8d7da;color:#721c24}
+    .empty{text-align:center;color:#888;padding:30px 10px}
+    #vistaLista.oculto,#vistaForm.oculto{display:none}
+    .form-actions{display:flex;gap:10px;margin-top:16px}
+    .form-actions .btn{flex:1}
+    .loading{text-align:center;color:#888;padding:20px}
+</style>
+</head>
+<body>
+
+<div id="vistaLista">
+    <div class="topbar">
+        <h2>👥 Usuarios</h2>
+        <button class="btn btn-primary" onclick="abrirFormNuevo()">+ Nuevo</button>
+    </div>
+    <div id="listaUsuarios" class="loading">Cargando usuarios...</div>
+</div>
+
+<div id="vistaForm" class="oculto">
+    <div class="topbar">
+        <h2 id="formTitulo">Nuevo Usuario</h2>
+        <button class="btn btn-secondary" onclick="volverALista()">← Volver</button>
+    </div>
+    <div id="msg" class="msg"></div>
+
+    <div class="card">
+        <div class="seccion-titulo">Datos básicos</div>
+        <div class="field"><label>Nombre</label><input type="text" id="f_nombre"></div>
+        <div class="field"><label>Correo</label><input type="email" id="f_correo"></div>
+        <div class="row2">
+            <div class="field"><label>Teléfono</label><input type="text" id="f_telefono"></div>
+            <div class="field"><label>Estado</label>
+                <select id="f_estado"><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select>
+            </div>
+        </div>
+        <div class="field"><label>Nombre del negocio</label><input type="text" id="f_nombrenegocio"></div>
+        <div class="field"><label>Ubicación (texto)</label><input type="text" id="f_ubicacion"></div>
+
+        <div class="seccion-titulo">Ubicación en mapa</div>
+        <div class="row2">
+            <div class="field"><label>Latitud</label><input type="text" id="f_lat"></div>
+            <div class="field"><label>Longitud</label><input type="text" id="f_lng"></div>
+        </div>
+
+        <div class="seccion-titulo">Descripción</div>
+        <div class="field"><label>Descripción del negocio</label><textarea id="f_descripcion"></textarea></div>
+        <div class="field"><label>Palabras clave (separadas por coma)</label><input type="text" id="f_palabrasclave"></div>
+
+        <div class="seccion-titulo">Banner</div>
+        <div class="foto-fila">
+            <img id="prev_fotobanner" src="">
+            <div class="foto-inputs">
+                <input type="file" accept="image/*" onchange="cargarImagen(this,'fotobanner')">
+                <input type="text" id="f_fotobanner" placeholder="o pega una URL de imagen" oninput="document.getElementById('prev_fotobanner').src=this.value">
+            </div>
+        </div>
+
+        <div class="seccion-titulo">Catálogo de fotos (hasta 4)</div>
+        <div id="catalogoFotos"></div>
+
+        <div class="form-actions">
+            <button class="btn btn-primary" onclick="guardarUsuario()">💾 Guardar</button>
+            <button class="btn btn-danger" id="btnEliminar" onclick="eliminarUsuario()" style="display:none">🗑️ Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = 'https://script.google.com/macros/s/AKfycbw83md07bzx1UmGRn51i-pRiuvQaEig_mUWS4VjvO0yTIlDCULqT8p3NGsSe2S4nZhzjA/exec';
+
+    let usuarios = [];
+    let editandoId = null; // null = nuevo usuario
+    let fotosCatalogo = ['', '', '', ''];
+
+    async function cargarUsuarios() {
+        const cont = document.getElementById('listaUsuarios');
+        cont.innerHTML = '<div class="loading">Cargando usuarios...</div>';
+        try {
+            const r = await fetch(API + '?tipo=negocios');
+            const d = await r.json();
+            if (!d.success) { cont.innerHTML = '<div class="empty">❌ ' + (d.message || 'Error al cargar') + '</div>'; return; }
+            usuarios = d.data.negocios || [];
+            renderLista();
+        } catch (e) {
+            cont.innerHTML = '<div class="empty">❌ Error de conexión</div>';
+        }
+    }
+
+    function renderLista() {
+        const cont = document.getElementById('listaUsuarios');
+        if (!usuarios.length) { cont.innerHTML = '<div class="empty">No hay usuarios todavía.<br>Toca "+ Nuevo" para agregar el primero.</div>'; return; }
+        cont.innerHTML = usuarios.map(u => {
+            const activo = String(u.estado || '').toLowerCase() === 'activo';
+            return `<div class="card user-card" onclick="abrirFormEditar('${u.idusuario}')">
+                <img src="${u.fotobanner || ''}">
+                <div class="info">
+                    <div class="nombre">${u.nombre || 'Sin nombre'}</div>
+                    <div class="negocio">${u.nombrenegocio || ''}</div>
+                    <span class="badge ${activo ? 'badge-activo' : 'badge-inactivo'}">${activo ? '✅ Activo' : '❌ Inactivo'}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderCatalogoInputs() {
+        const cont = document.getElementById('catalogoFotos');
+        let h = '';
+        for (let i = 1; i <= 4; i++) {
+            h += `<div class="foto-fila">
+                <img id="prev_foto${i}" src="${fotosCatalogo[i-1] || ''}">
+                <div class="foto-inputs">
+                    <input type="file" accept="image/*" onchange="cargarImagenCatalogo(${i}, this)">
+                    <input type="text" id="f_desc${i}" placeholder="Descripción foto ${i}">
+                </div>
+            </div>`;
+        }
+        cont.innerHTML = h;
+    }
+
+    function cargarImagen(input, campo) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('f_' + campo).value = e.target.result;
+            document.getElementById('prev_' + campo).src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function cargarImagenCatalogo(n, input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            fotosCatalogo[n - 1] = e.target.result;
+            document.getElementById('prev_foto' + n).src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function abrirFormNuevo() {
+        editandoId = null;
+        document.getElementById('formTitulo').textContent = 'Nuevo Usuario';
+        document.getElementById('btnEliminar').style.display = 'none';
+        ['nombre','correo','telefono','nombrenegocio','ubicacion','lat','lng','descripcion','palabrasclave','fotobanner'].forEach(id => document.getElementById('f_' + id).value = '');
+        document.getElementById('f_estado').value = 'Activo';
+        document.getElementById('prev_fotobanner').src = '';
+        fotosCatalogo = ['', '', '', ''];
+        renderCatalogoInputs();
+        mostrarFormulario();
+    }
+
+    function abrirFormEditar(id) {
+        const u = usuarios.find(x => String(x.idusuario) === String(id));
+        if (!u) return;
+        editandoId = u.idusuario;
+        document.getElementById('formTitulo').textContent = 'Editar Usuario';
+        document.getElementById('btnEliminar').style.display = 'block';
+        document.getElementById('f_nombre').value = u.nombre || '';
+        document.getElementById('f_correo').value = u.correo || '';
+        document.getElementById('f_telefono').value = u.telefono || '';
+        document.getElementById('f_estado').value = (String(u.estado || '').toLowerCase() === 'activo') ? 'Activo' : 'Inactivo';
+        document.getElementById('f_nombrenegocio').value = u.nombrenegocio || '';
+        document.getElementById('f_ubicacion').value = u.ubicacion || '';
+        document.getElementById('f_lat').value = u.lat || '';
+        document.getElementById('f_lng').value = u.lng || '';
+        document.getElementById('f_descripcion').value = u.descripcion || '';
+        document.getElementById('f_palabrasclave').value = u.palabrasclave || '';
+        document.getElementById('f_fotobanner').value = u.fotobanner || '';
+        document.getElementById('prev_fotobanner').src = u.fotobanner || '';
+        fotosCatalogo = [u.foto1 || '', u.foto2 || '', u.foto3 || '', u.foto4 || ''];
+        renderCatalogoInputs();
+        for (let i = 1; i <= 4; i++) document.getElementById('f_desc' + i).value = u['desc' + i] || '';
+        mostrarFormulario();
+    }
+
+    function mostrarFormulario() {
+        document.getElementById('vistaLista').classList.add('oculto');
+        document.getElementById('vistaForm').classList.remove('oculto');
+        ocultarMsg();
+    }
+
+    function volverALista() {
+        document.getElementById('vistaForm').classList.add('oculto');
+        document.getElementById('vistaLista').classList.remove('oculto');
+        cargarUsuarios();
+    }
+
+    function mostrarMsg(texto, ok) {
+        const m = document.getElementById('msg');
+        m.className = 'msg ' + (ok ? 'ok' : 'err');
+        m.textContent = texto;
+        m.style.display = 'block';
+    }
+    function ocultarMsg() { document.getElementById('msg').style.display = 'none'; }
+
+    async function guardarUsuario() {
+        const payload = {
+            _accion: 'upsert_usuario',
+            nombre: document.getElementById('f_nombre').value.trim(),
+            correo: document.getElementById('f_correo').value.trim(),
+            telefono: document.getElementById('f_telefono').value.trim(),
+            estado: document.getElementById('f_estado').value,
+            nombrenegocio: document.getElementById('f_nombrenegocio').value.trim(),
+            ubicacion: document.getElementById('f_ubicacion').value.trim(),
+            lat: document.getElementById('f_lat').value.trim(),
+            lng: document.getElementById('f_lng').value.trim(),
+            descripcion: document.getElementById('f_descripcion').value.trim(),
+            palabrasclave: document.getElementById('f_palabrasclave').value.trim(),
+            fotobanner: document.getElementById('f_fotobanner').value.trim(),
+            foto1: fotosCatalogo[0], desc1: document.getElementById('f_desc1').value.trim(),
+            foto2: fotosCatalogo[1], desc2: document.getElementById('f_desc2').value.trim(),
+            foto3: fotosCatalogo[2], desc3: document.getElementById('f_desc3').value.trim(),
+            foto4: fotosCatalogo[3], desc4: document.getElementById('f_desc4').value.trim()
+        };
+        if (!payload.nombre) { mostrarMsg('⚠️ El nombre es obligatorio', false); return; }
+        if (editandoId) payload.idusuario = editandoId;
+
+        try {
+            const r = await fetch(API, { method: 'POST', body: JSON.stringify(payload) });
+            const d = await r.json();
+            if (d.success) {
+                mostrarMsg('✅ ' + d.message, true);
+                setTimeout(volverALista, 800);
+            } else {
+                mostrarMsg('❌ ' + (d.message || 'Error al guardar'), false);
+            }
+        } catch (e) {
+            mostrarMsg('❌ Error de conexión', false);
+        }
+    }
+
+    async function eliminarUsuario() {
+        if (!editandoId) return;
+        if (!confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.')) return;
+        try {
+            const r = await fetch(API, { method: 'POST', body: JSON.stringify({ _accion: 'eliminar_usuario', idusuario: editandoId }) });
+            const d = await r.json();
+            if (d.success) {
+                mostrarMsg('✅ Usuario eliminado', true);
+                setTimeout(volverALista, 800);
+            } else {
+                mostrarMsg('❌ ' + (d.mensaje || d.message || 'Error al eliminar'), false);
+            }
+        } catch (e) {
+            mostrarMsg('❌ Error de conexión', false);
+        }
+    }
+
+    cargarUsuarios();
+</script>
+</body>
+</html>
